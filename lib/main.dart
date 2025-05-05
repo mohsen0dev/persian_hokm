@@ -6,7 +6,7 @@ import 'screens/home_screen.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
-  SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
+  SystemChrome.setEnabledSystemUIMode(SystemUiMode.leanBack);
   SystemChrome.setPreferredOrientations([
     DeviceOrientation.landscapeLeft,
     DeviceOrientation.landscapeRight,
@@ -25,7 +25,7 @@ class MyApp extends StatelessWidget {
       darkTheme: ThemeData(
         fontFamily: 'Vazirmatn',
         colorScheme: ColorScheme.fromSeed(
-          seedColor: Colors.blue,
+          seedColor: Colors.purple,
           brightness: Brightness.dark,
         ),
       ),

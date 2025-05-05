@@ -90,8 +90,15 @@ class GameCard {
   GameCard({required this.suit, required this.rank});
 
   String get suitName => suit.suitName;
-
+  String get suitSymbol => suit.suitSymbol;
   String get rankName => rank.rankName;
+
+  String get imagePath {
+    String rankStr = rank.toString().split('.').last;
+    String suitChar =
+        suit.toString().split('.').last[0]; // Get first character of suit
+    return 'assets/images/${rankStr}$suitChar.png';
+  }
 
   @override
   String toString() {

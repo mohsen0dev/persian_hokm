@@ -1,4 +1,3 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -17,7 +16,7 @@ class AbuteMeScreen extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           crossAxisAlignment: CrossAxisAlignment.center,
           mainAxisSize: MainAxisSize.min,
-          spacing: 10,
+          spacing: 12,
           children: [
             Image.asset('assets/drawables/logo.png', width: 100, height: 100),
             Text('بازی حکم ایرانی'),
