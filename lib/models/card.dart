@@ -10,10 +10,11 @@ extension SuitExtension on Suit {
     switch (this) {
       case Suit.hearts:
         return 'دل';
-      case Suit.diamonds:
-        return 'خشت';
+
       case Suit.clubs:
         return 'پیک';
+      case Suit.diamonds:
+        return 'خشت';
       case Suit.spades:
         return 'گیشنیز';
     }
@@ -23,10 +24,10 @@ extension SuitExtension on Suit {
     switch (this) {
       case Suit.hearts:
         return '♥';
-      case Suit.diamonds:
-        return '♦';
       case Suit.clubs:
         return '♣';
+      case Suit.diamonds:
+        return '♦';
       case Suit.spades:
         return '♠';
     }

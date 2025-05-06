@@ -73,6 +73,23 @@ class GameController extends GetxController {
       if (currentCard.rank == Rank.ace) {
         hokmPlayer.value = currentPlayer;
         showTajAndCircle.value = true;
+
+        // Show snackbar with hokm player name
+        Get.snackbar(
+          'حاکم مشخص شد!',
+          '${getPlayerName(currentPlayer)} حاکم شد',
+          snackPosition: SnackPosition.TOP,
+          backgroundColor: Colors.green,
+          colorText: Colors.white,
+          duration: const Duration(seconds: 2),
+        );
+
+        // Wait for snackbar to be visible
+        await Future.delayed(const Duration(seconds: 2));
+
+        // Collect all cards and redistribute
+        await _collectAndRedistributeCards();
+
         break;
       }
 
@@ -83,12 +100,69 @@ class GameController extends GetxController {
       await Future.delayed(const Duration(milliseconds: 500));
     }
 
+    // Sort bottom player's cards by suit and rank
+    if (playerCards['bottom']?.isNotEmpty ?? false) {
+      playerCards['bottom']?.sort((a, b) {
+        // Custom suit order: Hearts (0), Clubs (1), Diamonds (2), Spades (3)
+        final suitOrder = {
+          Suit.hearts: 0,
+          Suit.clubs: 1,
+          Suit.diamonds: 2,
+          Suit.spades: 3,
+        };
+        
+        if (a.suit != b.suit) {
+          return suitOrder[a.suit]!.compareTo(suitOrder[b.suit]!);
+        }
+        return b.rank.index.compareTo(a.rank.index); // Descending order
+      });
+    }
+
     isDistributing.value = false;
+  }
+
+  Future<void> _collectAndRedistributeCards() async {
+    // Clear all player cards
+    for (var playerCards in playerCards.values) {
+      playerCards.clear();
+    }
+
+    // Reset current card index
+    currentCardIndex.value = 0;
+
+    // Shuffle cards again
+    cards.shuffle(Random());
+
+    // Distribute 13 cards to each player
+    for (int i = 0; i < 13; i++) {
+      for (String position in ['bottom', 'right', 'top', 'left']) {
+        if (currentCardIndex.value < cards.length) {
+          playerCards[position]?.add(cards[currentCardIndex.value]);
+          currentCardIndex.value++;
+          await Future.delayed(const Duration(milliseconds: 100));
+        }
+      }
+    }
   }
 
   void removeTopCard() {
     if (currentCardIndex.value < cards.length) {
       currentCardIndex.value++;
+    }
+  }
+
+  String getPlayerName(String position) {
+    switch (position) {
+      case 'bottom':
+        return 'شما';
+      case 'right':
+        return 'حریف1';
+      case 'top':
+        return 'یار شما';
+      case 'left':
+        return 'حریف2';
+      default:
+        return '';
     }
   }
 }
@@ -128,7 +202,7 @@ class GameScreen extends StatelessWidget {
         }
       },
       child: Scaffold(
-        backgroundColor: Colors.blueAccent,
+        // backgroundColor: Colors.blueAccent,
         body: Stack(
           alignment: Alignment.center,
           fit: StackFit.expand,
@@ -140,8 +214,8 @@ class GameScreen extends StatelessWidget {
             Obx(() => controller.showCards.value ? cardRight() : SizedBox()),
             Obx(() => controller.showCards.value ? cardTop() : SizedBox()),
             Positioned(
-              right: 0,
-              top: 0,
+              right: 4,
+              top: 4,
               child: CircleAvatar(
                 child: CloseButton(),
               ),
@@ -195,7 +269,7 @@ class GameScreen extends StatelessWidget {
                   child: Text('انتخاب حاکم'),
                 )
               : GestureDetector(
-                  onTap: controller.removeTopCard,
+                  // onTap: controller.removeTopCard,
                   child: Stack(
                     fit: StackFit.passthrough,
                     children: [
@@ -216,118 +290,190 @@ class GameScreen extends StatelessWidget {
   }
 
   Widget cardBotton() {
-    return Positioned(
-      bottom: 0,
-      left: 0,
-      right: 0,
-      child: Obx(
-        () => Column(
-          children: [
-            if (controller.hokmPlayer.value == 'bottom')
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [...tajAnCir()],
+    return Builder(
+        builder: (context) => Obx(
+              () => Positioned(
+                bottom: controller.cardPositions['bottom']?.value ?? 0,
+                left: 0,
+                right: 0,
+                child: Column(
+                  children: [
+                    if (controller.hokmPlayer.value == 'bottom') ...tajAnCir(),
+                    SizedBox(height: 6),
+                    Center(
+                      child: Obx(
+                        () => controller.playerCards['bottom']?.isNotEmpty ??
+                                false
+                            ? SizedBox(
+                                height: 88,
+                                width: MediaQuery.of(context).size.width * 0.7,
+                                child: Stack(children: [
+                                  for (int i = 0;
+                                      i <
+                                          controller
+                                              .playerCards['bottom']!.length;
+                                      i++)
+                                    Positioned(
+                                      left: i *
+                                          (MediaQuery.of(context).size.width *
+                                              0.0526),
+                                      child: CardWidget(
+                                        card: controller
+                                            .playerCards['bottom']![i],
+                                      ),
+                                    ),
+                                ]))
+                            : SizedBox(),
+                      ),
+                    ),
+                  ],
+                ),
               ),
-            SizedBox(height: 4),
-            Center(
-              child: Obx(
-                () => controller.playerCards['bottom']?.isNotEmpty ?? false
-                    ? CardWidget(
-                        card: controller.playerCards['bottom']!.last,
-                      )
-                    : SizedBox(),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
+            ));
   }
 
   Widget cardLeft() {
-    return Obx(
-      () => Positioned(
-        left: controller.cardPositions['left']?.value ?? 0,
-        bottom: 0,
-        top: 0,
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            if (controller.hokmPlayer.value == 'left')
-              Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [...tajAnCir()],
-              ),
-            Center(
-              child: Obx(
-                () => controller.playerCards['left']?.isNotEmpty ?? false
-                    ? CardWidget(
-                        card: controller.playerCards['left']!.last,
-                      )
-                    : SizedBox(),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
+    return Builder(
+        builder: (context) => Obx(() => Positioned(
+            left: (controller.cardPositions['left']?.value ?? 0) + 1,
+            bottom: 0,
+            top: 0,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(controller.getPlayerName('left')),
+                    if (controller.hokmPlayer.value == 'left') ...tajAnCir(),
+                  ],
+                ),
+                SizedBox(width: 6),
+                Center(
+                  child: Obx(
+                    () => controller.playerCards['left']?.isNotEmpty ?? false
+                        ? SizedBox(
+                            height: 230,
+                            width: 65,
+                            child: Stack(
+                              children: [
+                                for (int i = 0;
+                                    i < controller.playerCards['left']!.length;
+                                    i++)
+                                  Positioned(
+                                    top: i *
+                                        (MediaQuery.of(context).size.height *
+                                            0.14 *
+                                            0.2),
+                                    child: CardWidget(
+                                      card: controller.playerCards['left']![i],
+                                    ),
+                                  ),
+                              ],
+                            ),
+                          )
+                        : SizedBox(),
+                  ),
+                ),
+              ],
+            ))));
   }
 
   Widget cardRight() {
-    return Obx(
-      () => Positioned(
-        right: controller.cardPositions['right']?.value ?? 0,
-        bottom: 0,
-        top: 0,
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Center(
-              child: Obx(
-                () => controller.playerCards['right']?.isNotEmpty ?? false
-                    ? CardWidget(
-                        card: controller.playerCards['right']!.last,
-                      )
-                    : SizedBox(),
+    return Builder(
+      builder: (context) => Obx(
+        () => Positioned(
+          right: (controller.cardPositions['right']?.value ?? 0) + 1,
+          bottom: 0,
+          top: 0,
+          child: Row(
+            children: [
+              Center(
+                child: Obx(
+                  () => controller.playerCards['right']?.isNotEmpty ?? false
+                      ? SizedBox(
+                          height: 230,
+                          width: 65,
+                          child: Stack(
+                            alignment: Alignment.center,
+                            children: [
+                              for (int i = 0;
+                                  i < controller.playerCards['right']!.length;
+                                  i++)
+                                Positioned(
+                                  top: i *
+                                      (MediaQuery.of(context).size.height *
+                                          0.14 *
+                                          0.2),
+                                  child: CardWidget(
+                                    card: controller.playerCards['right']![i],
+                                  ),
+                                ),
+                            ],
+                          ),
+                        )
+                      : SizedBox(),
+                ),
               ),
-            ),
-            if (controller.hokmPlayer.value == 'right')
+              SizedBox(width: 6),
               Column(
                 mainAxisAlignment: MainAxisAlignment.center,
-                children: [...tajAnCir()],
+                children: [
+                  Text(controller.getPlayerName('right')),
+                  if (controller.hokmPlayer.value == 'right') ...tajAnCir()
+                ],
               ),
-          ],
+            ],
+          ),
         ),
       ),
     );
   }
 
   Widget cardTop() {
-    return Obx(
-      () => Positioned(
-        top: controller.cardPositions['top']?.value ?? 0,
-        left: 0,
-        right: 0,
-        child: Column(
-          children: [
-            Center(
-              child: Obx(
-                () => controller.playerCards['top']?.isNotEmpty ?? false
-                    ? CardWidget(
-                        card: controller.playerCards['top']!.last,
-                      )
-                    : SizedBox(),
+    return Builder(
+        builder: (context) => Obx(
+              () => Positioned(
+                top: controller.cardPositions['top']?.value ?? 0,
+                left: 0,
+                right: 0,
+                child: Column(
+                  children: [
+                    Center(
+                      child: Obx(
+                        () => controller.playerCards['top']?.isNotEmpty ?? false
+                            ? SizedBox(
+                                height: 88,
+                                width: 250,
+                                child: Stack(children: [
+                                  for (int i = 0;
+                                      i < controller.playerCards['top']!.length;
+                                      i++)
+                                    Positioned(
+                                      right: i *
+                                          (MediaQuery.of(context).size.width *
+                                              0.19 *
+                                              0.09),
+                                      child: CardWidget(
+                                        card: controller.playerCards['top']![i],
+                                      ),
+                                    ),
+                                ]))
+                            : SizedBox(),
+                      ),
+                    ),
+                    SizedBox(height: 6),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(controller.getPlayerName('top')),
+                        if (controller.hokmPlayer.value == 'top') ...tajAnCir()
+                      ],
+                    ),
+                  ],
+                ),
               ),
-            ),
-            if (controller.hokmPlayer.value == 'top')
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [...tajAnCir()],
-              ),
-          ],
-        ),
-      ),
-    );
+            ));
   }
 
   List<Widget> tajAnCir() {
@@ -335,15 +481,6 @@ class GameScreen extends StatelessWidget {
       Image.asset(
         'assets/drawables/taj.png',
         height: 20,
-      ),
-      Container(
-        margin: EdgeInsets.all(8),
-        width: 10,
-        height: 10,
-        decoration: const BoxDecoration(
-          color: Colors.red,
-          shape: BoxShape.circle,
-        ),
       ),
     ];
   }
@@ -360,6 +497,7 @@ class CardWidget extends StatelessWidget {
       width: MediaQuery.sizeOf(context).height * 0.15,
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: Colors.black, width: 1),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.2),
