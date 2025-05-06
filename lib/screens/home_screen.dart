@@ -1,5 +1,3 @@
-import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:persian_hokm/screens/abute_me.dart';
@@ -29,7 +27,6 @@ class HomeScreen extends StatelessWidget {
                     Text(
                       'برای خروج دوباره دکمه برگشت را فشار دهید',
                       style: TextStyle(
-                        // fontSize: 16,
                         color: Colors.white,
                       ),
                     ),
@@ -40,11 +37,10 @@ class HomeScreen extends StatelessWidget {
                 ),
                 duration: const Duration(seconds: 2),
                 backgroundColor: Colors.black,
-                // behavior: SnackBarBehavior.floating,
               ),
             );
           } else {
-            exit(0);
+            Get.back();
           }
         }
       },
@@ -69,18 +65,17 @@ class HomeScreen extends StatelessWidget {
                   height: MediaQuery.of(context).size.height * 0.03,
                 ),
                 Center(
-                  child: cardListItems(
-                      context, 'شروع بازی', () => Get.to(GameScreen())),
-                ),
+                    child: cardListItems(context, 'شروع بازی',
+                        () => Get.to(() => (GameScreen())))),
                 cardListItems(
                   context,
                   'تنظیمات بازی',
-                  () => Get.to(SettingsScreen()),
+                  () => Get.to(() => SettingsScreen()),
                 ),
                 cardListItems(
                   context,
                   'درباره ما',
-                  () => Get.to(AbuteMeScreen()),
+                  () => Get.to(() => AbuteMeScreen()),
                 ),
                 cardListItems(context, 'ارسال لینک بازی', () {}),
               ],

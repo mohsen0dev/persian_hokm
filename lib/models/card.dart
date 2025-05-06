@@ -10,10 +10,11 @@ extension SuitExtension on Suit {
     switch (this) {
       case Suit.hearts:
         return 'دل';
-      case Suit.diamonds:
-        return 'خشت';
+
       case Suit.clubs:
         return 'پیک';
+      case Suit.diamonds:
+        return 'خشت';
       case Suit.spades:
         return 'گیشنیز';
     }
@@ -23,10 +24,10 @@ extension SuitExtension on Suit {
     switch (this) {
       case Suit.hearts:
         return '♥';
-      case Suit.diamonds:
-        return '♦';
       case Suit.clubs:
         return '♣';
+      case Suit.diamonds:
+        return '♦';
       case Suit.spades:
         return '♠';
     }
@@ -97,7 +98,7 @@ class GameCard {
     String rankStr = rank.toString().split('.').last;
     String suitChar =
         suit.toString().split('.').last[0]; // Get first character of suit
-    return 'assets/images/${rankStr}$suitChar.png';
+    return 'assets/images/$rankStr$suitChar.png';
   }
 
   @override
