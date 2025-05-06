@@ -97,7 +97,7 @@ class GameCard {
     String rankStr = rank.toString().split('.').last;
     String suitChar =
         suit.toString().split('.').last[0]; // Get first character of suit
-    return 'assets/images/${rankStr}$suitChar.png';
+    return 'assets/images/$rankStr$suitChar.png';
   }
 
   @override
