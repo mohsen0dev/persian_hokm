@@ -42,6 +42,21 @@ class GameController extends GetxController {
   /// آیا در حال توزیع کارت هست
   final isDistributing = false.obs;
 
+  /// خال حکم انتخاب شده
+  final selectedHokm = Rxn<Suit>();
+
+  /// آیا دیالوگ انتخاب حکم نمایش داده شده است
+  final showHokmDialog = false.obs;
+
+  /// آیا مرحله اول تقسیم کارت‌ها انجام شده است
+  final isFirstDistributionDone = false.obs;
+
+  /// آیا مرحله دوم تقسیم کارت‌ها انجام شده است
+  final isSecondDistributionDone = false.obs;
+
+  /// آیا مرحله سوم تقسیم کارت‌ها انجام شده است
+  final isThirdDistributionDone = false.obs;
+
   @override
   void onInit() {
     super.onInit();
@@ -58,6 +73,11 @@ class GameController extends GetxController {
     showCards.value = false;
     showStartButton.value = true;
     showTajAndCircle.value = false;
+    selectedHokm.value = null;
+    showHokmDialog.value = false;
+    isFirstDistributionDone.value = false;
+    isSecondDistributionDone.value = false;
+    isThirdDistributionDone.value = false;
     for (var position in cardPositions.values) {
       position.value = 0;
     }
@@ -121,24 +141,6 @@ class GameController extends GetxController {
       await Future.delayed(const Duration(milliseconds: 500));
     }
 
-    // Sort bottom player's cards by suit and rank
-    if (playerCards['bottom']?.isNotEmpty ?? false) {
-      playerCards['bottom']?.sort((a, b) {
-        // Custom suit order: Hearts (0), Clubs (1), Diamonds (2), Spades (3)
-        final suitOrder = {
-          Suit.hearts: 0,
-          Suit.clubs: 1,
-          Suit.diamonds: 2,
-          Suit.spades: 3,
-        };
-
-        if (a.suit != b.suit) {
-          return suitOrder[a.suit]!.compareTo(suitOrder[b.suit]!);
-        }
-        return b.rank.index.compareTo(a.rank.index); // Descending order
-      });
-    }
-
     isDistributing.value = false;
   }
 
@@ -161,16 +163,125 @@ class GameController extends GetxController {
       'top': (-60.0).obs,
     };
 
-    // Distribute 13 cards to each player
-    for (int i = 0; i < 13; i++) {
-      for (String position in ['bottom', 'right', 'top', 'left']) {
+    // Get distribution order based on hokm player
+    final distributionOrder = _getDistributionOrder();
+
+    // Distribute first 5 cards to each player
+    for (String position in distributionOrder) {
+      for (int i = 0; i < 5; i++) {
         if (currentCardIndex.value < cards.length) {
           playerCards[position]?.add(cards[currentCardIndex.value]);
           currentCardIndex.value++;
-          await Future.delayed(const Duration(milliseconds: 100));
         }
       }
+      await Future.delayed(const Duration(milliseconds: 500));
     }
+
+    // Sort bottom player's cards
+    _sortBottomPlayerCards();
+
+    isFirstDistributionDone.value = true;
+
+    // Show hokm dialog only for bottom player
+    if (hokmPlayer.value == 'bottom') {
+      showHokmDialog.value = true;
+    } else {
+      // For other players, select random hokm
+      selectRandomHokm();
+    }
+  }
+
+  /// توزیع کارت‌های مرحله دوم
+  Future<void> distributeSecondRound() async {
+    final distributionOrder = _getDistributionOrder();
+
+    // Distribute 4 cards to each player
+    for (String position in distributionOrder) {
+      for (int i = 0; i < 4; i++) {
+        if (currentCardIndex.value < cards.length) {
+          playerCards[position]?.add(cards[currentCardIndex.value]);
+          currentCardIndex.value++;
+        }
+      }
+      await Future.delayed(const Duration(milliseconds: 500));
+    }
+
+    // Sort bottom player's cards
+    _sortBottomPlayerCards();
+
+    isSecondDistributionDone.value = true;
+    distributeThirdRound();
+  }
+
+  /// توزیع کارت‌های مرحله سوم
+  Future<void> distributeThirdRound() async {
+    final distributionOrder = _getDistributionOrder();
+
+    // Distribute 4 cards to each player
+    for (String position in distributionOrder) {
+      for (int i = 0; i < 4; i++) {
+        if (currentCardIndex.value < cards.length) {
+          playerCards[position]?.add(cards[currentCardIndex.value]);
+          currentCardIndex.value++;
+        }
+      }
+      await Future.delayed(const Duration(milliseconds: 500));
+    }
+
+    // Sort bottom player's cards
+    _sortBottomPlayerCards();
+
+    isThirdDistributionDone.value = true;
+  }
+
+  /// مرتب کردن کارت‌های بازیکن پایین
+  void _sortBottomPlayerCards() {
+    if (playerCards['bottom']?.isNotEmpty ?? false) {
+      playerCards['bottom']?.sort((a, b) {
+        // Custom suit order: Hearts (0), Clubs (1), Diamonds (2), Spades (3)
+        final suitOrder = {
+          Suit.hearts: 0,
+          Suit.clubs: 1,
+          Suit.diamonds: 2,
+          Suit.spades: 3,
+        };
+
+        if (a.suit != b.suit) {
+          return suitOrder[a.suit]!.compareTo(suitOrder[b.suit]!);
+        }
+        return b.rank.index.compareTo(a.rank.index); // Descending order
+      });
+    }
+  }
+
+  /// دریافت ترتیب تقسیم کارت بر اساس حاکم
+  List<String> _getDistributionOrder() {
+    switch (hokmPlayer.value) {
+      case 'bottom':
+        return ['bottom', 'right', 'top', 'left'];
+      case 'right':
+        return ['right', 'top', 'left', 'bottom'];
+      case 'top':
+        return ['top', 'left', 'bottom', 'right'];
+      case 'left':
+        return ['left', 'bottom', 'right', 'top'];
+      default:
+        return ['bottom', 'right', 'top', 'left'];
+    }
+  }
+
+  /// انتخاب خال حکم
+  void selectHokm(Suit suit) {
+    selectedHokm.value = suit;
+    showHokmDialog.value = false;
+    distributeSecondRound();
+  }
+
+  /// انتخاب خودکار حکم برای کامپیوتر
+  void selectRandomHokm() {
+    final suits = Suit.values;
+    selectedHokm.value = suits[Random().nextInt(suits.length)];
+    distributeSecondRound();
   }
 
   /// حذف کردن کارت بالای پشته
@@ -232,7 +343,6 @@ class GameScreen extends StatelessWidget {
         }
       },
       child: Scaffold(
-        // backgroundColor: Colors.blueAccent,
         body: Stack(
           alignment: Alignment.center,
           fit: StackFit.expand,
@@ -250,6 +360,10 @@ class GameScreen extends StatelessWidget {
                 child: CloseButton(),
               ),
             ),
+            Obx(() => controller.showHokmDialog.value &&
+                    controller.hokmPlayer.value == 'bottom'
+                ? _buildHokmSelectionDialog()
+                : SizedBox()),
           ],
         ),
       ),
@@ -273,20 +387,22 @@ class GameScreen extends StatelessWidget {
               ],
             ),
           ),
-          bkgText(
-            child: Column(
-              children: [
-                Text(
-                  'حکم ',
-                  style: TextStyle(fontWeight: FontWeight.bold),
-                ),
-                Image.asset(
-                  'assets/drawables/clubs.png',
-                  width: 20,
-                ),
-              ],
-            ),
-          ),
+          Obx(() => controller.selectedHokm.value != null
+              ? bkgText(
+                  child: Column(
+                    children: [
+                      Text(
+                        'حکم ',
+                        style: TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                      Image.asset(
+                        'assets/drawables/${_getSuitImageName(controller.selectedHokm.value!)}',
+                        width: 20,
+                      ),
+                    ],
+                  ),
+                )
+              : SizedBox()),
         ],
       ),
     );
@@ -530,5 +646,74 @@ class GameScreen extends StatelessWidget {
         height: 20,
       ),
     ];
+  }
+
+  Widget _buildHokmSelectionDialog() {
+    return Container(
+      color: Colors.black54,
+      child: Center(
+        child: Container(
+          margin: EdgeInsets.symmetric(horizontal: 32),
+          padding: EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                'انتخاب خال حکم',
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              SizedBox(height: 16),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  _buildSuitButton(Suit.hearts, 'hearts.png'),
+                  _buildSuitButton(Suit.clubs, 'clubs.png'),
+                  _buildSuitButton(Suit.diamonds, 'diamonds.png'),
+                  _buildSuitButton(Suit.spades, 'spades.png'),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSuitButton(Suit suit, String imageName) {
+    return InkWell(
+      onTap: () => controller.selectHokm(suit),
+      child: Container(
+        padding: EdgeInsets.all(8),
+        decoration: BoxDecoration(
+          border: Border.all(color: Colors.grey),
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Image.asset(
+          'assets/drawables/$imageName',
+          width: 40,
+          height: 40,
+        ),
+      ),
+    );
+  }
+
+  String _getSuitImageName(Suit suit) {
+    switch (suit) {
+      case Suit.hearts:
+        return 'hearts.png';
+      case Suit.clubs:
+        return 'clubs.png';
+      case Suit.diamonds:
+        return 'diamonds.png';
+      case Suit.spades:
+        return 'spades.png';
+    }
   }
 }
