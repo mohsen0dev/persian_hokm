@@ -5,23 +5,40 @@ import 'package:get/get.dart';
 import 'package:persian_hokm/models/card.dart';
 
 class GameController extends GetxController {
+  /// لیست کارت های بازی
   final cards = <GameCard>[].obs;
+
+  /// اندیس کارت فعلی
   final currentCardIndex = 0.obs;
+
+  /// آیا باید تاج و دایره را نشان دهد
   final showTajAndCircle = false.obs;
+
+  /// آیا باید کارت ها را نشان دهد
   final showCards = false.obs;
+
+  /// آیا باید دکمه شروع بازی را نشان دهد
   final showStartButton = true.obs;
+
+  /// موقعیت های کارت ها
   final cardPositions = {
     'left': 0.0.obs,
     'right': 0.0.obs,
     'top': 0.0.obs,
   }.obs;
+
+  /// کارت های بازیکنان
   final playerCards = {
     'bottom': <GameCard>[].obs,
     'right': <GameCard>[].obs,
     'top': <GameCard>[].obs,
     'left': <GameCard>[].obs,
   }.obs;
+
+  /// بازیکن حاکم
   final hokmPlayer = ''.obs;
+
+  /// آیا در حال توزیع کارت هست
   final isDistributing = false.obs;
 
   @override
@@ -30,6 +47,7 @@ class GameController extends GetxController {
     _initializeCards();
   }
 
+  /// تخصیص کارت ها به بازیکنان
   void _initializeCards() {
     cards.clear();
     for (var list in playerCards.values) {
@@ -51,12 +69,14 @@ class GameController extends GetxController {
     cards.shuffle(Random());
   }
 
+  /// شروع بازی
   void startGame() {
     showStartButton.value = false;
     showCards.value = true;
     _distributeCards();
   }
 
+  /// توزیع کارت ها به بازیکنان
   Future<void> _distributeCards() async {
     isDistributing.value = true;
     final distributionOrder = ['bottom', 'right', 'top', 'left'];
@@ -110,7 +130,7 @@ class GameController extends GetxController {
           Suit.diamonds: 2,
           Suit.spades: 3,
         };
-        
+
         if (a.suit != b.suit) {
           return suitOrder[a.suit]!.compareTo(suitOrder[b.suit]!);
         }
@@ -121,6 +141,7 @@ class GameController extends GetxController {
     isDistributing.value = false;
   }
 
+  /// جمع کردن کارت ها و توزیع مجدد
   Future<void> _collectAndRedistributeCards() async {
     // Clear all player cards
     for (var playerCards in playerCards.values) {
@@ -132,6 +153,12 @@ class GameController extends GetxController {
 
     // Shuffle cards again
     cards.shuffle(Random());
+
+    cardPositions.value = {
+      'left': (-50.0).obs,
+      'right': (-50.0).obs,
+      'top': (-60.0).obs,
+    };
 
     // Distribute 13 cards to each player
     for (int i = 0; i < 13; i++) {
@@ -145,12 +172,14 @@ class GameController extends GetxController {
     }
   }
 
+  /// حذف کردن کارت بالای پشته
   void removeTopCard() {
     if (currentCardIndex.value < cards.length) {
       currentCardIndex.value++;
     }
   }
 
+  /// گرفتن نام بازیکن
   String getPlayerName(String position) {
     switch (position) {
       case 'bottom':
@@ -234,25 +263,44 @@ class GameScreen extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: [
-          Text('شما: 0'),
-          Row(
-            children: [
-              Text(
-                'حکم ',
-                style: TextStyle(
-                  fontSize: 18,
-                ),
-              ),
-              Image.asset(
-                'assets/drawables/clubs.png',
-                width: 25,
-              ),
-            ],
+          bkgText(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                Text('شما: 0'),
+                Text('حریف: 0'),
+              ],
+            ),
           ),
-          Text('حریف: 0'),
+          bkgText(
+            child: Column(
+              children: [
+                Text(
+                  'حکم ',
+                  style: TextStyle(
+                      // fontSize: 16,
+                      ),
+                ),
+                Image.asset(
+                  'assets/drawables/clubs.png',
+                  width: 20,
+                ),
+              ],
+            ),
+          ),
         ],
       ),
     );
+  }
+
+  Container bkgText({required Widget child}) {
+    return Container(
+        padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        decoration: BoxDecoration(
+          color: Colors.grey.shade700,
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: child);
   }
 
   Widget cardCenter() {
@@ -335,7 +383,7 @@ class GameScreen extends StatelessWidget {
   Widget cardLeft() {
     return Builder(
         builder: (context) => Obx(() => Positioned(
-            left: (controller.cardPositions['left']?.value ?? 0) + 1,
+            left: (controller.cardPositions['left']?.value ?? 50) + 1,
             bottom: 0,
             top: 0,
             child: Row(
@@ -383,7 +431,7 @@ class GameScreen extends StatelessWidget {
     return Builder(
       builder: (context) => Obx(
         () => Positioned(
-          right: (controller.cardPositions['right']?.value ?? 0) + 1,
+          right: (controller.cardPositions['right']?.value ?? 50) + 1,
           bottom: 0,
           top: 0,
           child: Row(
@@ -434,7 +482,7 @@ class GameScreen extends StatelessWidget {
     return Builder(
         builder: (context) => Obx(
               () => Positioned(
-                top: controller.cardPositions['top']?.value ?? 0,
+                top: (controller.cardPositions['top']?.value ?? 1),
                 left: 0,
                 right: 0,
                 child: Column(
