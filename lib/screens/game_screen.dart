@@ -57,6 +57,27 @@ class GameController extends GetxController {
   /// آیا مرحله سوم تقسیم کارت‌ها انجام شده است
   final isThirdDistributionDone = false.obs;
 
+  /// بازیکن فعلی که نوبت اوست
+  final currentPlayer = ''.obs;
+
+  /// کارت‌های روی زمین
+  final tableCards = <String, GameCard>{}.obs;
+
+  /// آیا نوبت بازیکن پایین است
+  final isBottomPlayerTurn = false.obs;
+
+  /// آیا بازی شروع شده است
+  final isGameStarted = false.obs;
+
+  /// امتیاز تیم‌ها
+  final teamScores = {
+    'team1': 0.obs, // بازیکن پایین و بالا
+    'team2': 0.obs, // بازیکن راست و چپ
+  }.obs;
+
+  /// خال اول دست
+  final firstSuit = Rxn<Suit>();
+
   @override
   void onInit() {
     super.onInit();
@@ -92,8 +113,14 @@ class GameController extends GetxController {
 
   /// شروع بازی
   void startGame() {
+    print('Starting game...');
     showStartButton.value = false;
     showCards.value = true;
+    isGameStarted.value = false;
+    currentPlayer.value = hokmPlayer.value;
+    isBottomPlayerTurn.value = hokmPlayer.value == 'bottom';
+    print(
+        'Game started. Current player: ${currentPlayer.value}, Is bottom turn: ${isBottomPlayerTurn.value}');
     _distributeCards();
   }
 
@@ -232,6 +259,13 @@ class GameController extends GetxController {
     _sortBottomPlayerCards();
 
     isThirdDistributionDone.value = true;
+
+    // اگر حاکم کامپیوتر است، کارت بازی کند
+    if (hokmPlayer.value != 'bottom') {
+      Future.delayed(Duration(milliseconds: 1000), () {
+        _playComputerCard();
+      });
+    }
   }
 
   /// مرتب کردن کارت‌های بازیکن پایین
@@ -272,8 +306,14 @@ class GameController extends GetxController {
 
   /// انتخاب خال حکم
   void selectHokm(Suit suit) {
+    print('Hokm selected: ${suit.toString()}');
     selectedHokm.value = suit;
     showHokmDialog.value = false;
+    isGameStarted.value = true;
+    currentPlayer.value = hokmPlayer.value;
+    isBottomPlayerTurn.value = hokmPlayer.value == 'bottom';
+    print(
+        'Game started after hokm selection. Current player: ${currentPlayer.value}, Is bottom turn: ${isBottomPlayerTurn.value}');
     distributeSecondRound();
   }
 
@@ -281,6 +321,12 @@ class GameController extends GetxController {
   void selectRandomHokm() {
     final suits = Suit.values;
     selectedHokm.value = suits[Random().nextInt(suits.length)];
+    print('Random hokm selected: ${selectedHokm.value}');
+    isGameStarted.value = true;
+    currentPlayer.value = hokmPlayer.value;
+    isBottomPlayerTurn.value = hokmPlayer.value == 'bottom';
+    print(
+        'Game started after random hokm selection. Current player: ${currentPlayer.value}, Is bottom turn: ${isBottomPlayerTurn.value}');
     distributeSecondRound();
   }
 
@@ -305,6 +351,258 @@ class GameController extends GetxController {
       default:
         return '';
     }
+  }
+
+  /// بررسی امکان بازی کارت
+  bool canPlayCard(GameCard card) {
+    // اگر نوبت بازیکن پایین نیست و بازیکن پایین نیست، اجازه بازی بده
+    if (!isBottomPlayerTurn.value && currentPlayer.value != 'bottom') {
+      return true;
+    }
+
+    // اگر نوبت بازیکن پایین نیست، اجازه بازی نده
+    if (!isBottomPlayerTurn.value) {
+      print('Not bottom player turn');
+      return false;
+    }
+
+    if (tableCards.isEmpty) {
+      print('First card of the hand');
+      return true;
+    }
+
+    // اگر کارت از خال اول دست نباشد و بازیکن کارت از خال اول دست داشته باشد، نمی‌تواند کارت دیگری بازی کند
+    if (card.suit != firstSuit.value) {
+      final hasFirstSuitCard =
+          playerCards['bottom']!.any((c) => c.suit == firstSuit.value);
+      if (hasFirstSuitCard) {
+        print('Player has first suit card but trying to play different suit');
+        return false;
+      }
+    }
+
+    print('Card can be played');
+    return true;
+  }
+
+  /// بازی کردن کارت
+  void playCard(GameCard card) {
+    print('Playing card: ${card.toString()}');
+    if (!canPlayCard(card)) {
+      print('Cannot play card');
+      return;
+    }
+
+    // اضافه کردن کارت به میز
+    tableCards[currentPlayer.value] = card;
+    print('Card added to table');
+
+    // حذف کارت از دست بازیکن
+    final playerCardsList = playerCards[currentPlayer.value]!;
+    final index = playerCardsList
+        .indexWhere((c) => c.suit == card.suit && c.rank == card.rank);
+    if (index != -1) {
+      playerCardsList.removeAt(index);
+    }
+    print('Card removed from player hand');
+
+    // تنظیم خال اول دست
+    if (tableCards.length == 1) {
+      firstSuit.value = card.suit;
+      print('First suit set to: ${card.suit}');
+    }
+
+    // تغییر نوبت به بازیکن بعدی
+    _nextPlayer();
+    print('Turn changed to: ${currentPlayer.value}');
+
+    // به‌روزرسانی UI
+    update();
+
+    // اگر همه بازیکنان کارت بازی کرده‌اند، دست را تمام کن
+    if (tableCards.length == 4) {
+      print('Hand complete, ending hand');
+      _endHand();
+    } else {
+      // اگر نوبت بازیکن کامپیوتر است، کارت بازی کن
+      if (currentPlayer.value != 'bottom') {
+        print('Computer player turn, playing computer card');
+        Future.delayed(Duration(milliseconds: 1000), () {
+          _playComputerCard();
+        });
+      }
+    }
+  }
+
+  /// بازی کردن کارت توسط کامپیوتر
+  void _playComputerCard() {
+    print('_playComputerCard called for player: ${currentPlayer.value}');
+    if (currentPlayer.value == 'bottom') {
+      print('Current player is bottom, returning');
+      return;
+    }
+
+    final computerCards = playerCards[currentPlayer.value]!;
+    if (computerCards.isEmpty) {
+      print('Computer has no cards, returning');
+      return;
+    }
+
+    print('Computer cards: ${computerCards.length}');
+    GameCard? selectedCard;
+
+    // اگر اولین کارت دست است
+    if (tableCards.isEmpty) {
+      print('First card of the hand');
+      // اگر کارت حکم دارد، آن را بازی کن
+      selectedCard = computerCards.firstWhere(
+        (card) => card.suit == selectedHokm.value,
+        orElse: () => computerCards.first,
+      );
+    } else {
+      print('Not first card, first suit: ${firstSuit.value}');
+      // اگر کارت از خال اول دست دارد، آن را بازی کن
+      final firstSuitCards =
+          computerCards.where((card) => card.suit == firstSuit.value).toList();
+      if (firstSuitCards.isNotEmpty) {
+        print('Playing first suit card');
+        selectedCard = firstSuitCards.first;
+      } else {
+        print('No first suit card, checking for hokm');
+        // اگر کارت حکم دارد، آن را بازی کن
+        final hokmCards = computerCards
+            .where((card) => card.suit == selectedHokm.value)
+            .toList();
+        if (hokmCards.isNotEmpty) {
+          print('Playing hokm card');
+          selectedCard = hokmCards.first;
+        } else {
+          print('Playing random card');
+          selectedCard = computerCards.first;
+        }
+      }
+    }
+
+    if (selectedCard != null) {
+      print('Selected card: ${selectedCard.toString()}');
+      playCard(selectedCard);
+    } else {
+      print('No card selected');
+    }
+  }
+
+  /// تغییر نوبت به بازیکن بعدی
+  void _nextPlayer() {
+    final players = ['bottom', 'right', 'top', 'left'];
+    final currentIndex = players.indexOf(currentPlayer.value);
+    final nextIndex = (currentIndex + 1) % 4;
+    currentPlayer.value = players[nextIndex];
+    isBottomPlayerTurn.value = currentPlayer.value == 'bottom';
+    print(
+        'Turn changed to: ${currentPlayer.value}, Is bottom turn: ${isBottomPlayerTurn.value}');
+  }
+
+  /// پایان دست و محاسبه امتیاز
+  void _endHand() async {
+    print('Ending hand...');
+    // محاسبه برنده دست
+    final winner = _calculateHandWinner();
+    print('Hand winner: $winner');
+
+    // اضافه کردن امتیاز به تیم برنده
+    if (winner == 'bottom' || winner == 'top') {
+      teamScores['team1']?.value++;
+      print('Team 1 scored. New score: ${teamScores['team1']?.value}');
+    } else {
+      teamScores['team2']?.value++;
+      print('Team 2 scored. New score: ${teamScores['team2']?.value}');
+    }
+
+    // بررسی برنده بازی
+    if (teamScores['team1']?.value == 7 || teamScores['team2']?.value == 7) {
+      _endGame();
+      return;
+    }
+
+    // تاخیر برای نمایش کارت‌ها
+    await Future.delayed(Duration(seconds: 2));
+
+    // پاک کردن کارت‌های روی میز
+    tableCards.clear();
+    firstSuit.value = null;
+    print('Table cleared');
+
+    // شروع دست جدید با بازیکن برنده
+    currentPlayer.value = winner;
+    isBottomPlayerTurn.value = winner == 'bottom';
+    print(
+        'New hand started. Current player: ${currentPlayer.value}, Is bottom turn: ${isBottomPlayerTurn.value}');
+
+    // اگر برنده کامپیوتر است، کارت بازی کند
+    if (winner != 'bottom') {
+      Future.delayed(Duration(milliseconds: 1000), () {
+        _playComputerCard();
+      });
+    }
+  }
+
+  /// پایان بازی
+  void _endGame() {
+    final winningTeam = teamScores['team1']?.value == 7 ? 'team1' : 'team2';
+    final winningTeamName = winningTeam == 'team1' ? 'شما و یار' : 'حریفان';
+
+    Get.dialog(
+      AlertDialog(
+        title: Text('پایان بازی'),
+        content: Text('$winningTeamName برنده شدند!'),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Get.back();
+              Get.back(); // برگشت به صفحه قبل
+            },
+            child: Text('بستن'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// محاسبه برنده دست
+  String _calculateHandWinner() {
+    String winner = tableCards.keys.first;
+    GameCard? winningCard = tableCards[winner];
+
+    for (var entry in tableCards.entries) {
+      final card = entry.value;
+      if (_isCardHigher(card, winningCard!)) {
+        winningCard = card;
+        winner = entry.key;
+      }
+    }
+
+    return winner;
+  }
+
+  /// بررسی اینکه آیا کارت اول از کارت دوم قوی‌تر است
+  bool _isCardHigher(GameCard card1, GameCard card2) {
+    // اگر کارت اول حکم است و کارت دوم حکم نیست
+    if (card1.suit == selectedHokm.value && card2.suit != selectedHokm.value) {
+      return true;
+    }
+    // اگر کارت دوم حکم است و کارت اول حکم نیست
+    if (card2.suit == selectedHokm.value && card1.suit != selectedHokm.value) {
+      return false;
+    }
+    // اگر هر دو کارت حکم هستند یا هر دو حکم نیستند
+    if (card1.suit == card2.suit) {
+      return card1.rank.index > card2.rank.index;
+    }
+    // اگر کارت اول از خال اول دست است و کارت دوم نیست
+    if (card1.suit == firstSuit.value && card2.suit != firstSuit.value) {
+      return true;
+    }
+    return false;
   }
 }
 
@@ -382,8 +680,10 @@ class GameScreen extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
-                Text('شما: 0'),
-                Text('حریف: 0'),
+                Obx(() => Text(
+                    'شما و یار: ${controller.teamScores['team1']?.value}')),
+                Obx(() =>
+                    Text('حریفان: ${controller.teamScores['team2']?.value}')),
               ],
             ),
           ),
@@ -431,19 +731,52 @@ class GameScreen extends StatelessWidget {
                   onPressed: controller.startGame,
                   child: Text('انتخاب حاکم'),
                 )
-              : GestureDetector(
-                  // onTap: controller.removeTopCard,
+              : Container(
+                  // color: Colors.amber,
+                  height: 150,
+                  width: 250,
                   child: Stack(
-                    fit: StackFit.passthrough,
+                    // fit: StackFit.passthrough,
+                    alignment: Alignment.center,
                     children: [
-                      for (int i = controller.cards.length - 1;
-                          i >= controller.currentCardIndex.value;
-                          i--)
-                        Positioned(
-                          child: CardWidget(
-                            card: controller.cards[i],
+                      // نمایش کارت‌های روی میز در حالت بازی
+                      Obx(() => controller.isGameStarted.value &&
+                              controller.tableCards.isNotEmpty
+                          ? Positioned(
+                              child: Stack(
+                                children: [
+                                  for (var entry
+                                      in controller.tableCards.entries)
+                                    Align(
+                                      alignment: entry.key == 'left'
+                                          ? Alignment.centerLeft
+                                          : entry.key == 'right'
+                                              ? Alignment.centerRight
+                                              : entry.key == 'top'
+                                                  ? Alignment.topCenter
+                                                  : Alignment.bottomCenter,
+                                      // right: entry.key == 'right' ? 10 : null,
+                                      // left: entry.key == 'left' ? 10 : null,
+                                      // top: entry.key == 'top' ? 10 : null,
+                                      // bottom: entry.key == 'bottom' ? 10 : null,
+                                      child: CardWidget(
+                                        card: entry.value,
+                                      ),
+                                    ),
+                                ],
+                              ),
+                            )
+                          : SizedBox()),
+                      // نمایش کارت‌های پشته در حالت اولیه
+                      if (controller.showCards.value)
+                        for (int i = controller.cards.length - 1;
+                            i >= controller.currentCardIndex.value;
+                            i--)
+                          Positioned(
+                            child: CardWidget(
+                              card: controller.cards[i],
+                            ),
                           ),
-                        ),
                     ],
                   ),
                 ),
@@ -480,9 +813,28 @@ class GameScreen extends StatelessWidget {
                                       left: i *
                                           (MediaQuery.of(context).size.width *
                                               0.0526),
-                                      child: CardWidget(
-                                        card: controller
-                                            .playerCards['bottom']![i],
+                                      child: GestureDetector(
+                                        onTap: () {
+                                          final card = controller
+                                              .playerCards['bottom']![i];
+                                          print(
+                                              'Card tapped: ${card.toString()}');
+                                          print(
+                                              'Is bottom player turn: ${controller.isBottomPlayerTurn.value}');
+                                          print(
+                                              'Can play card: ${controller.canPlayCard(card)}');
+                                          if (controller
+                                                  .isBottomPlayerTurn.value &&
+                                              controller.canPlayCard(card)) {
+                                            controller.playCard(card);
+                                          }
+                                        },
+                                        child: CardWidget(
+                                          card: controller
+                                              .playerCards['bottom']![i],
+                                          isSelectable: controller
+                                              .isBottomPlayerTurn.value,
+                                        ),
                                       ),
                                     ),
                                 ]))

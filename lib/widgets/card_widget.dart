@@ -3,8 +3,13 @@ import 'package:persian_hokm/models/card.dart';
 
 class CardWidget extends StatelessWidget {
   final GameCard card;
+  final bool isSelectable;
 
-  const CardWidget({super.key, required this.card});
+  const CardWidget({
+    super.key,
+    required this.card,
+    this.isSelectable = false,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -12,7 +17,10 @@ class CardWidget extends StatelessWidget {
       width: MediaQuery.sizeOf(context).height * 0.15,
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: Colors.black, width: 1),
+        border: Border.all(
+          color: isSelectable ? Colors.blue : Colors.black,
+          width: isSelectable ? 2 : 1,
+        ),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.2),
@@ -23,24 +31,37 @@ class CardWidget extends StatelessWidget {
       ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(10),
-        child: Image.asset(
-          card.imagePath,
-          fit: BoxFit.cover,
-          errorBuilder: (context, error, stackTrace) {
-            return Container(
-              color: Colors.white,
-              child: Center(
-                child: Text(
-                  '${card.rankName}\n${card.suitSymbol}',
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
+        child: Stack(
+          children: [
+            Image.asset(
+              card.imagePath,
+              fit: BoxFit.cover,
+              errorBuilder: (context, error, stackTrace) {
+                return Container(
+                  color: Colors.white,
+                  child: Center(
+                    child: Text(
+                      '${card.rankName}\n${card.suitSymbol}',
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                );
+              },
+            ),
+            if (isSelectable)
+              Positioned.fill(
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: Colors.blue.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(10),
                   ),
                 ),
               ),
-            );
-          },
+          ],
         ),
       ),
     );

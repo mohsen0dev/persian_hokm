@@ -7,17 +7,17 @@ import 'screens/home_screen.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // حالت immersiveSticky برای پنهان‌سازی پایدار نوارهای سیستم
+  //! حالت immersiveSticky برای پنهان‌سازی پایدار نوارهای سیستم
   await SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
 
-  // شفاف کردن نوار وضعیت و ناوبری
+  //! شفاف کردن نوار وضعیت و ناوبری
   SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
     statusBarColor: Colors.transparent,
     systemNavigationBarColor: Colors.transparent,
     statusBarIconBrightness: Brightness.light,
     systemNavigationBarIconBrightness: Brightness.light,
   ));
-
+  //! چرخش صفحه
   await SystemChrome.setPreferredOrientations([
     DeviceOrientation.landscapeLeft,
     DeviceOrientation.landscapeRight,

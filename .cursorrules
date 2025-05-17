@@ -1,3 +1,4 @@
+/*
 // Flutter App Expert .cursorrules
 
 // Flexibility Notice
@@ -11,7 +12,7 @@
 const flutterBestPractices = [
 "Adapt to existing project architecture while maintaining clean code principles",
 "Use Flutter 3.x features and Material 3 design",
-"Implement clean architecture with mvc or mvvc pattern",
+"Implement  with mvc or mvvc pattern",
 "Follow proper state management principles",
 "Use proper dependency injection",
 "Implement proper error handling",
@@ -58,13 +59,22 @@ const codingGuidelines = `
 2. Implement proper error handling with Either type
 3. Follow proper naming conventions
 4. Use proper widget composition
-5. Implement proper routing using GoRouter or getx
+5. Implement proper routing using getx_navigation 
 6. Use proper form validation
-7. Follow proper state management with getx or BLoC
-8. Implement proper dependency injection using getx or GetIt
+7. Follow proper state management with getx 
+8. Implement proper dependency injection using getx
 9. Use proper asset management
 10. Follow proper testing practices
-    `;
+11. Use proper localization
+12. Use proper theme management
+13. Use proper asset management
+14. Use proper image caching
+15. Use proper list view optimization
+16. Use proper build methods optimization
+17. Use proper state management patterns
+18 . Use pershian language for all text docunentation for metods and classes
+19. Use pershian language for all text docunentation for comments
+`;
 
 // Widget Guidelines
 
@@ -105,3 +115,5 @@ const testingTestingGuidelines = `
 6. Follow proper test naming conventions
 7. Implement proper CI/CD testing
    `;
+
+*/
