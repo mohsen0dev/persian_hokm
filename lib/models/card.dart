@@ -87,6 +87,8 @@ class GameCard {
   final Suit suit;
   final Rank rank;
   bool isSelected = false;
+  dynamic
+      player; // بازیکن صاحب کارت (nullable). نوع dynamic برای جلوگیری از import چرخشی
 
   GameCard({required this.suit, required this.rank});
 
