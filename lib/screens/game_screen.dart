@@ -1,9 +1,11 @@
 import 'dart:math';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:persian_hokm/models/card.dart';
 import 'package:persian_hokm/widgets/card_widget.dart';
+import 'package:persian_hokm/screens/settings_screen.dart';
 
 // -------------------- منطق بازی حکم (تبدیل شده از کاتلین) --------------------
 
@@ -43,34 +45,90 @@ abstract class Player {
 
   /// انتخاب خال حکم توسط هوش مصنوعی
   Suit determineHokm() {
-    final groupWithCounts = <Suit, int>{};
-    for (var card in hand) {
-      groupWithCounts[card.suit] = (groupWithCounts[card.suit] ?? 0) + 1;
+    if (hand.isEmpty) throw Exception("Hand is empty");
+
+    // دیکشنری امتیازدهی کارت‌ها (به صورت تاکتیکی)
+    final rankScore = {
+      Rank.ace: 8,
+      Rank.king: 6,
+      Rank.queen: 5,
+      Rank.jack: 4,
+      Rank.ten: 3,
+      Rank.nine: 2,
+      Rank.eight: 1,
+      Rank.seven: 1,
+      Rank.six: 0,
+      Rank.five: 0,
+      Rank.four: 0,
+      Rank.three: 0,
+      Rank.two: 0,
+    };
+
+    final Map<Suit, int> suitScore = {};
+    final Map<Suit, int> suitCount = {};
+
+    // محاسبه امتیاز و تعداد کارت‌های هر خال
+    for (final card in hand) {
+      suitCount[card.suit] = (suitCount[card.suit] ?? 0) + 1;
+      suitScore[card.suit] =
+          (suitScore[card.suit] ?? 0) + (rankScore[card.rank] ?? 0);
     }
-    final sorted = groupWithCounts.entries.toList()
-      ..sort((a, b) => b.value.compareTo(a.value));
-    if (sorted[0].value >= 3) return sorted[0].key;
-    if (sorted.length > 1 && sorted[0].value > sorted[1].value)
-      return sorted[0].key;
-    if (sorted.length > 1) {
-      final first = hand
-          .where((c) => c.suit == sorted[0].key)
-          .reduce((a, b) => a.rank.index < b.rank.index ? b : a);
-      final second = hand
-          .where((c) => c.suit == sorted[1].key)
-          .reduce((a, b) => a.rank.index < b.rank.index ? b : a);
-      return first.rank.index > second.rank.index
-          ? sorted[0].key
-          : sorted[1].key;
-    }
-    return hand.first.suit;
+
+    // ترکیب امتیاز و تعداد برای رتبه‌بندی هوشمند
+    final scoredSuits = suitScore.entries.map((entry) {
+      final suit = entry.key;
+      final score = entry.value;
+      final count = suitCount[suit]!;
+      final total =
+          score + (count * 2); // تعداد ×۲ برای تأکید بر داشتن کارت بیشتر
+      return MapEntry(suit, total);
+    }).toList();
+
+    // مرتب‌سازی خال‌ها از بهترین به ضعیف‌ترین
+    scoredSuits.sort((a, b) => b.value.compareTo(a.value));
+
+    // برگرداندن خال با بیشترین امتیاز ترکیبی
+    return scoredSuits.first.key;
   }
+
+  // Suit determineHokm() {
+  //   final groupWithCounts = <Suit, int>{};
+  //   for (var card in hand) {
+  //     groupWithCounts[card.suit] = (groupWithCounts[card.suit] ?? 0) + 1;
+  //   }
+  //   final sorted = groupWithCounts.entries.toList()
+  //     ..sort((a, b) => b.value.compareTo(a.value));
+  //   if (sorted[0].value >= 3) return sorted[0].key;
+  //   if (sorted.length > 1 && sorted[0].value > sorted[1].value) {
+  //     return sorted[0].key;
+  //   }
+  //   if (sorted.length > 1) {
+  //     final first = hand
+  //         .where((c) => c.suit == sorted[0].key)
+  //         .reduce((a, b) => a.rank.index < b.rank.index ? b : a);
+  //     final second = hand
+  //         .where((c) => c.suit == sorted[1].key)
+  //         .reduce((a, b) => a.rank.index < b.rank.index ? b : a);
+  //     return first.rank.index > second.rank.index
+  //         ? sorted[0].key
+  //         : sorted[1].key;
+  //   }
+  //   return hand.first.suit;
+  // }
 }
 
 /// بازیکن هوش مصنوعی
 class PlayerAI extends Player {
-  PlayerAI(String name, Direction direction, List<GameCard> cards)
-      : super(name, cards, direction);
+  final int aiLevel;
+  final bool isPartner;
+
+  PlayerAI(
+    String name,
+    Direction direction,
+    List<GameCard> cards, {
+    required this.aiLevel,
+    required this.isPartner,
+  }) : super(name, cards, direction);
 
   @override
   GameCard play({
@@ -79,25 +137,132 @@ class PlayerAI extends Player {
     required List<Team> teams,
     required Suit hokm,
   }) {
-    // منطق انتخاب کارت توسط هوش مصنوعی (ساده شده)
+    final effectiveLevel = isPartner ? 3 : aiLevel;
+    switch (effectiveLevel) {
+      case 1:
+        return _basicPlay(table, hokm);
+      case 2:
+        return _intermediatePlay(table, hokm);
+      case 3:
+      default:
+        return _advancedPlay(table, hokm, tableHistory, teams);
+    }
+  }
+
+  GameCard _basicPlay(List<GameCard> table, Suit hokm) {
     if (table.isEmpty) {
-      // اگر اولین کارت دست است، غیرحکم را بازی کن، اگر نبود هر کارت
-      final notHokms = hand.where((c) => c.suit != hokm).toList();
-      return notHokms.isNotEmpty
-          ? notHokms.reduce((a, b) => a.rank.index < b.rank.index ? b : a)
-          : hand.first;
+      final nonHokms = hand.where((c) => c.suit != hokm).toList();
+      return nonHokms.isNotEmpty ? _strongest(nonHokms) : _strongest(hand);
     }
-    final sameSuitCards = hand.where((c) => c.suit == table[0].suit).toList();
-    if (sameSuitCards.isNotEmpty) {
-      // اگر کارت هم‌خال داری باید بازی کنی
-      return sameSuitCards
-          .reduce((a, b) => a.rank.index < b.rank.index ? a : b);
+
+    final sameSuit = _sameSuitCards(table.first);
+    if (sameSuit.isNotEmpty) {
+      return _weakest(sameSuit);
     }
-    // اگر کارت هم‌خال نداری، اگر حکم داری بازی کن، وگرنه هر کارت
-    final hokmCards = hand.where((c) => c.suit == hokm).toList();
-    return hokmCards.isNotEmpty
-        ? hokmCards.reduce((a, b) => a.rank.index < b.rank.index ? a : b)
-        : hand.first;
+
+    final hokms = _suitCards(hokm);
+    return hokms.isNotEmpty ? _weakest(hokms) : _weakest(hand);
+  }
+
+  GameCard _intermediatePlay(List<GameCard> table, Suit hokm) {
+    if (table.isEmpty) return _strongest(hand);
+
+    final sameSuit = _sameSuitCards(table.first);
+    if (sameSuit.isNotEmpty) {
+      final maxOnTable =
+          _strongest(table.where((c) => c.suit == table.first.suit).toList());
+      final winning =
+          sameSuit.where((c) => c.rank.index > maxOnTable.rank.index).toList();
+      return winning.isNotEmpty ? _weakest(winning) : _weakest(sameSuit);
+    }
+
+    final hokms = _suitCards(hokm);
+    return hokms.isNotEmpty ? _strongest(hokms) : _weakest(hand);
+  }
+
+  GameCard _advancedPlay(
+    List<GameCard> table,
+    Suit hokm,
+    List<List<GameCard>> tableHistory,
+    List<Team> teams,
+  ) {
+    final playedCards = tableHistory.expand((list) => list).toList();
+    final seenCards = [...playedCards, ...table];
+    final unseenCards = allPossibleCards()
+        .where(
+            (c) => !seenCards.any((p) => p.suit == c.suit && p.rank == c.rank))
+        .toList();
+
+    if (table.isEmpty) {
+      // شروع‌کننده: ضعیف‌ترین کارت غیرحکم یا ضعیف‌ترین کارت
+      final nonHokms = hand.where((c) => c.suit != hokm).toList();
+      return nonHokms.isNotEmpty ? _weakest(nonHokms) : _weakest(hand);
+    }
+
+    final leadSuit = table.first.suit;
+    final sameSuit = _suitCards(leadSuit);
+
+    if (sameSuit.isNotEmpty) {
+      // اگر کارت هم‌خال داری
+      final maxOnTable =
+          _strongest(table.where((c) => c.suit == leadSuit).toList());
+      final canWin =
+          sameSuit.where((c) => c.rank.index < maxOnTable.rank.index).toList();
+      // اگر می‌توانی دست را ببری، ضعیف‌ترین کارت برنده را بازی کن
+      if (canWin.isNotEmpty) return _strongest(canWin);
+      // اگر نمی‌توانی ببری، ضعیف‌ترین کارت را بازی کن
+      return _weakest(sameSuit);
+    }
+
+    // کارت هم‌خال نداری
+    final hokmCards = _suitCards(hokm);
+    final nonHokmCards = hand.where((c) => c.suit != hokm).toList();
+
+    // آیا کسی روی میز حکم انداخته؟
+    final maxHokmOnTable = table.where((c) => c.suit == hokm);
+    final maxHokm =
+        maxHokmOnTable.isNotEmpty ? _strongest(maxHokmOnTable.toList()) : null;
+
+    // اگر حکم داری
+    if (hokmCards.isNotEmpty) {
+      // اگر کسی روی میز حکم انداخته و می‌توانی با حکم دست را ببری
+      if (maxHokm != null) {
+        final winHokm =
+            hokmCards.where((c) => c.rank.index < maxHokm.rank.index).toList();
+        if (winHokm.isNotEmpty) {
+          // با ضعیف‌ترین حکم برنده ببر
+          return _strongest(winHokm);
+        } else {
+          // نمی‌توانی ببری، ضعیف‌ترین حکم را بازی کن
+          return _weakest(hokmCards);
+        }
+      } else {
+        // کسی روی میز حکم نینداخته
+        // اگر کارت غیرحکم داری، با ضعیف‌ترین کارت غیرحکم رد کن
+        if (nonHokmCards.isNotEmpty) return _weakest(nonHokmCards);
+        // اگر فقط حکم داری، ضعیف‌ترین حکم را بازی کن
+        return _weakest(hokmCards);
+      }
+    }
+
+    // اگر حکم نداری، ضعیف‌ترین کارت غیرحکم را بازی کن
+    return _weakest(nonHokmCards.isNotEmpty ? nonHokmCards : hand);
+  }
+
+  List<GameCard> _suitCards(Suit suit) =>
+      hand.where((c) => c.suit == suit).toList();
+  List<GameCard> _sameSuitCards(GameCard card) => _suitCards(card.suit);
+
+  GameCard _strongest(List<GameCard> cards) =>
+      cards.reduce((a, b) => a.rank.index > b.rank.index ? a : b);
+  GameCard _weakest(List<GameCard> cards) =>
+      cards.reduce((a, b) => a.rank.index < b.rank.index ? a : b);
+
+  List<GameCard> allPossibleCards() {
+    return [
+      for (final suit in Suit.values)
+        for (final rank in Rank.values) GameCard(suit: suit, rank: rank)
+    ];
   }
 }
 
@@ -128,7 +293,9 @@ class GameLogic {
   }
 
   void newGame() {
-    hands.forEach((h) => h.clear());
+    for (var h in hands) {
+      h.clear();
+    }
     players.clear();
     teams.clear();
     table.clear();
@@ -148,12 +315,11 @@ class GameLogic {
     return cards;
   }
 
+//! تعیین حاکم
   void determineHakem() {
-    var j = 0;
     var card = deck.last;
     directionHakemDetermination = Direction.bottom;
     while (card.rank != Rank.ace) {
-      j++;
       deck.removeLast();
       if (deck.isEmpty) break;
       card = deck.last;
@@ -179,6 +345,7 @@ class GameLogic {
     }
   }
 
+//! توزیع کارت
   void dealCards(int numCards) {
     var dir = hakem;
     for (int i = 0; i < 4; i++) {
@@ -195,11 +362,15 @@ class GameLogic {
     }
     // ساخت بازیکنان و تیم‌ها فقط در اولین تقسیم کارت
     if (numCards == 5 && players.isEmpty) {
+      final aiLevel = Get.find<SettingsController>().aiLevel.value;
       players = [
         PlayerHuman('شما', hands[Direction.bottom.index], Direction.bottom),
-        PlayerAI('حریف1', Direction.right, hands[Direction.right.index]),
-        PlayerAI('یار شما', Direction.top, hands[Direction.top.index]),
-        PlayerAI('حریف2', Direction.left, hands[Direction.left.index]),
+        PlayerAI('حریف1', Direction.right, hands[Direction.right.index],
+            aiLevel: aiLevel, isPartner: false),
+        PlayerAI('یار شما', Direction.top, hands[Direction.top.index],
+            aiLevel: aiLevel, isPartner: true),
+        PlayerAI('حریف2', Direction.left, hands[Direction.left.index],
+            aiLevel: aiLevel, isPartner: false),
       ];
       teams = [
         Team(players[0], players[2]),
@@ -224,6 +395,7 @@ class GameLogic {
     }
   }
 
+//! اعتبارسنجی کارت
   bool isValidCard(GameCard card, Direction playerDir) {
     if (tableDir != Direction.bottom) return false;
     if (table.isEmpty) return true;
@@ -235,6 +407,7 @@ class GameLogic {
     return false;
   }
 
+//! بازی کردن کارت
   void playCard(GameCard card, Direction direction) {
     // حذف کارت از دست بازیکن (در منطق بازی)
     players[direction.index]
@@ -252,6 +425,7 @@ class GameLogic {
     }
   }
 
+//! بازیکن برنده
   Player getTableWinner(List<GameCard> table, Suit hokm, List<Team> teams) {
     // اگر همه کارت‌ها هم‌خال باشند
     if (table.every((c) => c.suit == table[0].suit)) {
@@ -268,6 +442,7 @@ class GameLogic {
     }
   }
 
+//! بازیکن برنده
   Player _getWinner(List<GameCard> cards) {
     // کارت با بالاترین ارزش (index کمتر یعنی ارزش بیشتر)
     GameCard winnerCard = cards.first;
@@ -282,8 +457,7 @@ class GameLogic {
 
 /// بازیکن انسانی (برای تکمیل بعدی)
 class PlayerHuman extends Player {
-  PlayerHuman(String name, List<GameCard> cards, Direction direction)
-      : super(name, cards, direction);
+  PlayerHuman(super.name, super.cards, super.direction);
 
   @override
   GameCard play({
@@ -405,7 +579,9 @@ class GameController extends GetxController {
 
   /// شروع بازی
   void startGame() async {
-    print('Starting game...');
+    if (kDebugMode) {
+      print('Starting game...');
+    }
     showStartButton.value = false;
     showCards.value = true;
     isGameStarted.value = false;
@@ -479,12 +655,16 @@ class GameController extends GetxController {
       await _dealCardsStepByStep(5);
       // مقداردهی بازیکنان و تیم‌ها بعد از توزیع ۵ کارت
       if (game.players.isEmpty) {
+        final aiLevel = Get.find<SettingsController>().aiLevel.value;
         game.players = [
           PlayerHuman(
               'شما', game.hands[Direction.bottom.index], Direction.bottom),
-          PlayerAI('حریف1', Direction.right, game.hands[Direction.right.index]),
-          PlayerAI('یار شما', Direction.top, game.hands[Direction.top.index]),
-          PlayerAI('حریف2', Direction.left, game.hands[Direction.left.index]),
+          PlayerAI('حریف1', Direction.right, game.hands[Direction.right.index],
+              aiLevel: aiLevel, isPartner: false),
+          PlayerAI('یار شما', Direction.top, game.hands[Direction.top.index],
+              aiLevel: aiLevel, isPartner: true),
+          PlayerAI('حریف2', Direction.left, game.hands[Direction.left.index],
+              aiLevel: aiLevel, isPartner: false),
         ];
         game.teams = [
           Team(game.players[0], game.players[2]),
@@ -645,7 +825,7 @@ class GameController extends GetxController {
     if (game.table.length == 1) {
       firstSuit.value = card.suit;
     }
-    if (game.table.length == 0) {
+    if (game.table.isEmpty) {
       final winner = _directionToString(game.tableDir);
       _endHandUI(winner);
     } else {
@@ -708,7 +888,7 @@ class GameController extends GetxController {
   /// پایان بازی
   void _endGame() {
     final winningTeam = teamScores['team1']?.value == 7 ? 'team1' : 'team2';
-    final winningTeamName = winningTeam == 'team1' ? 'شما و یار' : 'حریفان';
+    final winningTeamName = winningTeam == 'team1' ? 'شما ' : 'حریف ';
 
     Get.dialog(
       AlertDialog(
@@ -736,12 +916,16 @@ class GameController extends GetxController {
 
     // اگر نوبت بازیکن پایین نیست، اجازه بازی نده
     if (!isBottomPlayerTurn.value) {
-      print('Not bottom player turn');
+      if (kDebugMode) {
+        print('Not bottom player turn');
+      }
       return false;
     }
 
     if (tableCards.isEmpty) {
-      print('First card of the hand');
+      if (kDebugMode) {
+        print('First card of the hand');
+      }
       return true;
     }
 
@@ -750,12 +934,16 @@ class GameController extends GetxController {
       final hasFirstSuitCard =
           playerCards['bottom']!.any((c) => c.suit == firstSuit.value);
       if (hasFirstSuitCard) {
-        print('Player has first suit card but trying to play different suit');
+        if (kDebugMode) {
+          print('Player has first suit card but trying to play different suit');
+        }
         return false;
       }
     }
 
-    print('Card can be played');
+    if (kDebugMode) {
+      print('Card can be played');
+    }
     return true;
   }
 
@@ -787,6 +975,7 @@ class GameScreen extends StatelessWidget {
   GameScreen({super.key});
 
   final controller = Get.put(GameController());
+  final settingsController = Get.put(SettingsController());
 
   @override
   Widget build(BuildContext context) {
@@ -817,31 +1006,47 @@ class GameScreen extends StatelessWidget {
           }
         }
       },
-      child: Scaffold(
-        body: Stack(
-          alignment: Alignment.center,
-          fit: StackFit.expand,
-          children: [
-            textTop(),
-            cardCenter(),
-            Obx(() => controller.showCards.value ? cardBotton() : SizedBox()),
-            Obx(() => controller.showCards.value ? cardLeft() : SizedBox()),
-            Obx(() => controller.showCards.value ? cardRight() : SizedBox()),
-            Obx(() => controller.showCards.value ? cardTop() : SizedBox()),
-            Positioned(
-              right: 4,
-              top: 4,
-              child: CircleAvatar(
-                child: CloseButton(),
+      child: Obx(() {
+        final idx = settingsController.backgroundIndex.value;
+        final isColor = idx < settingsController.backgroundColors.length;
+        return Scaffold(
+          body: Stack(
+            alignment: Alignment.center,
+            fit: StackFit.expand,
+            children: [
+              isColor
+                  ? Container(color: settingsController.backgroundColors[idx])
+                  : Container(
+                      decoration: BoxDecoration(
+                        image: DecorationImage(
+                          image: AssetImage(settingsController.backgroundImages[
+                              idx -
+                                  settingsController.backgroundColors.length]),
+                          fit: BoxFit.cover,
+                        ),
+                      ),
+                    ),
+              textTop(),
+              cardCenter(),
+              Obx(() => controller.showCards.value ? cardBotton() : SizedBox()),
+              Obx(() => controller.showCards.value ? cardLeft() : SizedBox()),
+              Obx(() => controller.showCards.value ? cardRight() : SizedBox()),
+              Obx(() => controller.showCards.value ? cardTop() : SizedBox()),
+              Positioned(
+                right: 4,
+                top: 4,
+                child: CircleAvatar(
+                  child: CloseButton(),
+                ),
               ),
-            ),
-            Obx(() => controller.showHokmDialog.value &&
-                    controller.hokmPlayer.value == 'bottom'
-                ? _buildHokmSelectionDialog()
-                : SizedBox()),
-          ],
-        ),
-      ),
+              Obx(() => controller.showHokmDialog.value &&
+                      controller.hokmPlayer.value == 'bottom'
+                  ? _buildHokmSelectionDialog()
+                  : SizedBox()),
+            ],
+          ),
+        );
+      }),
     );
   }
 
@@ -908,7 +1113,7 @@ class GameScreen extends StatelessWidget {
                   onPressed: controller.startGame,
                   child: Text('انتخاب حاکم'),
                 )
-              : Container(
+              : SizedBox(
                   height: 150,
                   width: 250,
                   child: Stack(
@@ -987,12 +1192,14 @@ class GameScreen extends StatelessWidget {
                                         onTap: () {
                                           final card = controller
                                               .playerCards['bottom']![i];
-                                          print(
-                                              'Card tapped: ${card.toString()}');
-                                          print(
-                                              'Is bottom player turn: ${controller.isBottomPlayerTurn.value}');
-                                          print(
-                                              'Can play card: ${controller.canPlayCard(card)}');
+                                          if (kDebugMode) {
+                                            print(
+                                                'Card tapped: ${card.toString()}');
+                                            print(
+                                                'Is bottom player turn: ${controller.isBottomPlayerTurn.value}');
+                                            print(
+                                                'Can play card: ${controller.canPlayCard(card)}');
+                                          }
                                           if (controller
                                                   .isBottomPlayerTurn.value &&
                                               controller.canPlayCard(card)) {

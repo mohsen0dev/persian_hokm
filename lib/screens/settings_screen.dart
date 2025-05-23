@@ -1,172 +1,309 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+import 'package:get_storage/get_storage.dart';
 
-class SettingsScreen extends StatefulWidget {
-  const SettingsScreen({super.key});
+class SettingsController extends GetxController {
+  final box = GetStorage();
+
+  final animationSpeed = 1.obs;
+  // هوش مصنوعی: 0=مبتدی، 1=معمولی، 2=حرفه‌ای
+  final aiLevel = 1.obs;
+  // پس‌زمینه: 0=مشکی، 1=سفید، 2=خاکستری، 3-6=عکس
+  final backgroundIndex = 0.obs;
+  // طرح پشت کارت: 0=قرمز، 1=آبی، 2=سبز، 3-6=عکس
+  final cardBackIndex = 0.obs;
+
+  final List<Color> backgroundColors = [
+    Colors.black,
+    Colors.white,
+    Colors.grey.shade700
+  ];
+  final List<String> backgroundImages = [
+    'assets/drawables/background.jpg',
+    'assets/drawables/background2.jpg',
+    'assets/drawables/background3.jpg',
+    'assets/drawables/background4.jpg',
+  ];
+  final List<Color> cardBackColors = [Colors.red, Colors.blue, Colors.green];
+  final List<String> cardBackImages = [
+    'assets/drawables/cardBack1.png',
+    'assets/drawables/cardBack2.png',
+    'assets/drawables/cardBack3.png',
+    'assets/drawables/cardBack4.png',
+  ];
 
   @override
-  State<SettingsScreen> createState() => _SettingsScreenState();
+  void onInit() {
+    super.onInit();
+    animationSpeed.value = box.read('animationSpeed') ?? 1;
+    aiLevel.value = box.read('aiLevel') ?? 1;
+    backgroundIndex.value = box.read('backgroundIndex') ?? 0;
+    cardBackIndex.value = box.read('cardBackIndex') ?? 0;
+  }
+
+  void saveSettings() async {
+    await box.write('animationSpeed', animationSpeed.value);
+    await box.write('aiLevel', aiLevel.value);
+    await box.write('backgroundIndex', backgroundIndex.value);
+    await box.write('cardBackIndex', cardBackIndex.value);
+  }
+
+  void resetSettings() async {
+    animationSpeed.value = 1;
+    aiLevel.value = 1;
+    backgroundIndex.value = 0;
+    cardBackIndex.value = 0;
+    await box.erase();
+    saveSettings();
+  }
 }
 
-class _SettingsScreenState extends State<SettingsScreen> {
-  // late SharedPreferences _prefs;
-  double _gameSpeed = 1000; // Default 1 second
-  Color _backgroundColor = Colors.white;
-  Color _teammateCardColor = Colors.red;
-  Color _opponentCardColor = Colors.blue;
+class MyWidget extends StatelessWidget {
+  const MyWidget({super.key});
 
   @override
-  void initState() {
-    super.initState();
-    // _loadSettings();
+  Widget build(BuildContext context) {
+    return Container();
   }
+}
 
-  // Future<void> _loadSettings() async {
-  //   _prefs = await SharedPreferences.getInstance();
-  //   setState(() {
-  //     _gameSpeed = _prefs.getDouble('gameSpeed') ?? 1000;
-  //     _backgroundColor =
-  //         Color(_prefs.getInt('backgroundColor') ?? Colors.white.value);
-  //     _teammateCardColor =
-  //         Color(_prefs.getInt('teammateCardColor') ?? Colors.red.value);
-  //     _opponentCardColor =
-  //         Color(_prefs.getInt('opponentCardColor') ?? Colors.blue.value);
-  //   });
-  // }
+class SettingsScreen extends StatelessWidget {
+  SettingsScreen({super.key});
 
-  // Future<void> _saveSettings() async {
-  //   await _prefs.setDouble('gameSpeed', _gameSpeed);
-  //   await _prefs.setInt('backgroundColor', _backgroundColor.value);
-  //   await _prefs.setInt('teammateCardColor', _teammateCardColor.value);
-  //   await _prefs.setInt('opponentCardColor', _opponentCardColor.value);
-  // }
-
-  Future<void> _resetToDefault() async {
-    setState(() {
-      _gameSpeed = 1000;
-      _backgroundColor = Colors.white;
-      _teammateCardColor = Colors.red;
-      _opponentCardColor = Colors.blue;
-    });
-    // await _saveSettings();
-  }
+  // سرعت انیمیشن: 0=کم، 1=عادی، 2=تند
+  final settingsController = Get.put(SettingsController());
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('تنظیمات بازی'),
+        title: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Row(
+              children: [
+                IconButton(
+                  onPressed: () {
+                    settingsController.saveSettings();
+                    Get.back();
+                  },
+                  icon: const Icon(Icons.save),
+                ),
+                IconButton(
+                  onPressed: () {
+                    settingsController.resetSettings();
+                  },
+                  icon: const Icon(Icons.restore),
+                ),
+              ],
+            ),
+            const Text('تنظیمات بازی'),
+            SizedBox(width: 80),
+          ],
+        ),
         centerTitle: true,
       ),
-      body: ListView(
-        padding: const EdgeInsets.all(16.0),
-        children: [
-          _buildSpeedSlider(),
-          const SizedBox(height: 24),
-          _buildColorPicker(
-            'رنگ پس زمینه',
-            _backgroundColor,
-            (color) {
-              setState(() => _backgroundColor = color);
-              // _saveSettings();
-            },
-          ),
-          const SizedBox(height: 16),
-          _buildColorPicker(
-            'رنگ کارت یار',
-            _teammateCardColor,
-            (color) {
-              setState(() => _teammateCardColor = color);
-              // _saveSettings();
-            },
-          ),
-          const SizedBox(height: 16),
-          _buildColorPicker(
-            'رنگ کارت حریف',
-            _opponentCardColor,
-            (color) {
-              setState(() => _opponentCardColor = color);
-              // _saveSettings();
-            },
-          ),
-          const SizedBox(height: 32),
-          ElevatedButton(
-            onPressed: _resetToDefault,
-            child: const Text('بازگشت به تنظیمات پیش‌فرض'),
-          ),
-        ],
-      ),
+      body: Obx(() {
+        return ListView(
+          padding: const EdgeInsets.all(16.0),
+          children: [
+            _sectionTitle('سرعت پخش کارت‌ها'),
+            _buildAnimationSpeedChips(),
+            const Divider(height: 24),
+            _sectionTitle('هوش مصنوعی حریفان'),
+            _buildAILevelChips(),
+            const Divider(height: 24),
+            _sectionTitle('پس‌زمینه صفحه بازی'),
+            _buildBackgroundPicker(),
+            const Divider(height: 24),
+            _sectionTitle('طرح پشت کارت‌ها'),
+            _buildCardBackPicker(),
+            const SizedBox(height: 24),
+          ],
+        );
+      }),
     );
   }
 
-  Widget _buildSpeedSlider() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+  Widget _sectionTitle(String title) => Padding(
+        padding: const EdgeInsets.only(bottom: 8.0, top: 8),
+        child: Text(title, style: const TextStyle(fontWeight: FontWeight.bold)),
+      );
+
+  Widget _buildAnimationSpeedChips() {
+    final labels = ['کم', 'عادی', 'تند'];
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: List.generate(
+          3,
+          (i) => Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 6),
+                child: ChoiceChip(
+                  label: Text(labels[i]),
+                  selected: settingsController.animationSpeed.value == i,
+                  onSelected: (selected) =>
+                      settingsController.animationSpeed.value = i,
+                  selectedColor: Colors.purple.shade200,
+                ),
+              )),
+    );
+  }
+
+  Widget _buildAILevelChips() {
+    final labels = ['مبتدی', 'معمولی', 'حرفه‌ای'];
+    final icons = [
+      Icons.sentiment_very_dissatisfied,
+      Icons.sentiment_satisfied,
+      Icons.sentiment_very_satisfied
+    ];
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: List.generate(
+          3,
+          (i) => Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 6),
+                child: ChoiceChip(
+                  avatar: Icon(icons[i],
+                      color: settingsController.aiLevel.value == i
+                          ? Colors.white
+                          : Colors.grey),
+                  label: Text(labels[i]),
+                  selected: settingsController.aiLevel.value == i,
+                  onSelected: (selected) =>
+                      settingsController.aiLevel.value = i,
+                  selectedColor: Colors.purple.shade200,
+                ),
+              )),
+    );
+  }
+
+  Widget _buildBackgroundPicker() {
+    final selectedColor = Colors.purple.shade200;
+    return Wrap(
+      spacing: 12,
+      runSpacing: 12,
       children: [
-        const Text(
-          'سرعت بازی',
-          style: TextStyle(fontSize: 18),
-        ),
-        Slider(
-          value: _gameSpeed,
-          min: 500,
-          max: 3000,
-          divisions: 5,
-          label: '${(_gameSpeed / 1000).toStringAsFixed(1)} ثانیه',
-          onChanged: (value) {
-            setState(() => _gameSpeed = value);
-            // _saveSettings();
-          },
-        ),
-        Text(
-          '${(_gameSpeed / 1000).toStringAsFixed(1)} ثانیه',
-          style: const TextStyle(fontSize: 16),
-        ),
+        ...List.generate(
+            settingsController.backgroundColors.length,
+            (i) => GestureDetector(
+                  onTap: () => settingsController.backgroundIndex.value = i,
+                  child: Container(
+                    width: 56,
+                    height: 56,
+                    decoration: BoxDecoration(
+                      color: settingsController.backgroundColors[i],
+                      shape: BoxShape.circle,
+                      border: Border.all(
+                        color: settingsController.backgroundIndex.value == i
+                            ? selectedColor
+                            : Colors.grey,
+                        width: 3,
+                      ),
+                    ),
+                    child: settingsController.backgroundIndex.value == i
+                        ? Icon(Icons.check_circle_outlined,
+                            color: selectedColor, size: 25)
+                        : null,
+                  ),
+                )),
+        ...List.generate(
+            settingsController.backgroundImages.length,
+            (i) => GestureDetector(
+                  onTap: () => settingsController.backgroundIndex.value =
+                      i + settingsController.backgroundColors.length,
+                  child: Container(
+                    width: 70,
+                    height: 45,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.rectangle,
+                      border: Border.all(
+                        color: settingsController.backgroundIndex.value ==
+                                i + settingsController.backgroundColors.length
+                            ? selectedColor
+                            : Colors.grey,
+                        width: 2,
+                      ),
+                      image: DecorationImage(
+                        image:
+                            AssetImage(settingsController.backgroundImages[i]),
+                        fit: BoxFit.cover,
+                      ),
+                    ),
+                    child: settingsController.backgroundIndex.value ==
+                            i + settingsController.backgroundColors.length
+                        ? ColoredBox(
+                            color: Colors.white.withOpacity(0.5),
+                            child: Icon(Icons.check_circle_outlined,
+                                color: selectedColor, size: 30),
+                          )
+                        : null,
+                  ),
+                )),
       ],
     );
   }
 
-  Widget _buildColorPicker(
-    String title,
-    Color currentColor,
-    ValueChanged<Color> onColorChanged,
-  ) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+  Widget _buildCardBackPicker() {
+    final selectedColor = Colors.purple.shade200;
+    return Wrap(
+      spacing: 12,
+      runSpacing: 12,
       children: [
-        Text(
-          title,
-          style: const TextStyle(fontSize: 18),
-        ),
-        const SizedBox(height: 8),
-        Wrap(
-          spacing: 8,
-          children: [
-            Colors.red,
-            Colors.blue,
-            Colors.green,
-            Colors.yellow,
-            Colors.purple,
-            Colors.orange,
-            Colors.white,
-            Colors.black,
-          ].map((color) {
-            return GestureDetector(
-              onTap: () => onColorChanged(color),
-              child: Container(
-                width: 40,
-                height: 40,
-                decoration: BoxDecoration(
-                  color: color,
-                  shape: BoxShape.circle,
-                  border: Border.all(
-                    color: currentColor == color ? Colors.black : Colors.grey,
-                    width: 2,
+        ...List.generate(
+            settingsController.cardBackColors.length,
+            (i) => GestureDetector(
+                  onTap: () => settingsController.cardBackIndex.value = i,
+                  child: Container(
+                    width: 56,
+                    height: 56,
+                    decoration: BoxDecoration(
+                      color: settingsController.cardBackColors[i],
+                      shape: BoxShape.circle,
+                      border: Border.all(
+                        color: settingsController.cardBackIndex.value == i
+                            ? selectedColor
+                            : Colors.grey,
+                        width: 3,
+                      ),
+                    ),
+                    child: settingsController.cardBackIndex.value == i
+                        ? Icon(Icons.check_circle_outlined,
+                            color: selectedColor, size: 25)
+                        : null,
                   ),
-                ),
-              ),
-            );
-          }).toList(),
-        ),
+                )),
+        ...List.generate(
+            settingsController.cardBackImages.length,
+            (i) => GestureDetector(
+                  onTap: () => settingsController.cardBackIndex.value =
+                      i + settingsController.cardBackColors.length,
+                  child: Container(
+                    width: 45,
+                    height: 60,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.rectangle,
+                      border: Border.all(
+                        color: settingsController.cardBackIndex.value ==
+                                i + settingsController.cardBackColors.length
+                            ? selectedColor
+                            : Colors.grey.shade200,
+                        width: 3,
+                      ),
+                      image: DecorationImage(
+                        image: AssetImage(settingsController.cardBackImages[i]),
+                        fit: BoxFit.cover,
+                      ),
+                    ),
+                    child: settingsController.cardBackIndex.value ==
+                            i + settingsController.cardBackColors.length
+                        ? ColoredBox(
+                            color: Colors.white.withOpacity(0.5),
+                            child: Icon(Icons.check_circle_outlined,
+                                color: selectedColor, size: 30),
+                          )
+                        : null,
+                  ),
+                )),
       ],
     );
   }
