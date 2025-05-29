@@ -14,11 +14,11 @@ class CardWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: MediaQuery.sizeOf(context).height * 0.15,
+      width: 60,
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(10),
         border: Border.all(
-          color: isSelectable ? Colors.blue : Colors.black,
+          color: isSelectable ? Colors.blue : Colors.red,
           width: isSelectable ? 2 : 1,
         ),
         boxShadow: [

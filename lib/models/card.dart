@@ -1,3 +1,4 @@
+/// خال کارت
 enum Suit {
   hearts, // گشنیز
   diamonds, // خشت
@@ -5,21 +6,23 @@ enum Suit {
   spades // دل
 }
 
+/// اکسنسیون خال کارت
 extension SuitExtension on Suit {
+  /// نام خال
   String get suitName {
     switch (this) {
       case Suit.hearts:
         return 'دل';
-
       case Suit.clubs:
-        return 'پیک';
+        return 'گیشنیز';
       case Suit.diamonds:
         return 'خشت';
       case Suit.spades:
-        return 'گیشنیز';
+        return 'پیک';
     }
   }
 
+  /// علامت خال
   String get suitSymbol {
     switch (this) {
       case Suit.hearts:
@@ -34,6 +37,7 @@ extension SuitExtension on Suit {
   }
 }
 
+/// اکسنسیون رنک
 enum Rank {
   ace,
   king,
@@ -50,7 +54,9 @@ enum Rank {
   two
 }
 
+/// اکسنسیون رنک
 extension RankExtension on Rank {
+  /// نام رنک
   String get rankName {
     switch (this) {
       case Rank.ace:
@@ -58,7 +64,7 @@ extension RankExtension on Rank {
       case Rank.king:
         return 'شاه';
       case Rank.queen:
-        return 'بیبی';
+        return 'بی بی';
       case Rank.jack:
         return 'سرباز';
       case Rank.ten:
@@ -84,11 +90,18 @@ extension RankExtension on Rank {
 }
 
 class GameCard {
+  //! خال کارت
   final Suit suit;
+
+  //! رنک کارت
   final Rank rank;
+
+  //! انتخاب شده
   bool isSelected = false;
-  dynamic
-      player; // بازیکن صاحب کارت (nullable). نوع dynamic برای جلوگیری از import چرخشی
+
+  //! بازیکن صاحب کارت
+  dynamic player;
+  // بازیکن صاحب کارت (nullable). نوع dynamic برای جلوگیری از import چرخشی
 
   GameCard({required this.suit, required this.rank});
 
@@ -107,4 +120,15 @@ class GameCard {
   String toString() {
     return '$rankName $suitName';
   }
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is GameCard &&
+          runtimeType == other.runtimeType &&
+          suit == other.suit &&
+          rank == other.rank;
+
+  @override
+  int get hashCode => suit.hashCode ^ rank.hashCode;
 }
