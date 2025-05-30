@@ -1,11 +1,13 @@
 import 'dart:math';
 
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:persian_hokm/models/card.dart';
 import 'package:persian_hokm/widgets/card_widget.dart';
 import 'package:persian_hokm/screens/settings_screen.dart';
+import 'package:persian_hokm/widgets/animated_card.dart';
+import 'package:persian_hokm/widgets/played_animated_card.dart';
+import 'package:audioplayers/audioplayers.dart';
 
 // -------------------- منطق بازی حکم (تبدیل شده از کاتلین) --------------------
 
@@ -806,7 +808,22 @@ class GameController extends GetxController {
   /// نمونه‌ای از کلاس GameLogic که حاوی منطق اصلی بازی است.
   late GameLogic game;
 
+  /// لیست کارت‌های متحرک در حال انتقال (برای انیمیشن توزیع کارت)
+  final animatedCards = <AnimatedCardData>[].obs;
+
+  /// لیست کارت‌های متحرک هنگام بازی (از دست بازیکن به مرکز)
+  final animatedPlayedCards = <PlayedAnimatedCardData>[].obs;
+
   BuildContext get context => Get.context!;
+
+  final AudioPlayer _audioPlayer = AudioPlayer();
+
+  Future<void> playSound(String name) async {
+    try {
+      await _audioPlayer.stop();
+      await _audioPlayer.play(AssetSource('songs/$name'));
+    } catch (_) {}
+  }
 
   /// متد اولیه ساز کنترلر که هنگام ایجاد شدن کنترلر فراخوانی می‌شود.
   /// در این متد نمونه GameLogic ساخته شده و کارت‌ها مقداردهی اولیه می‌شوند.
@@ -883,10 +900,20 @@ class GameController extends GetxController {
     while (currentCardIndex < cards.length) {
       final currentCard = cards[currentCardIndex];
       final currentPlayer = distributionOrder[currentPlayerIndex];
-      playerCards[currentPlayer]?.add(currentCard);
-      cards.removeAt(currentCardIndex); // حذف کارت از پشته وسط
+      // پخش صدای پخش کارت
+      playSound('pakhsh.mp3');
+      // انیمیشن انتقال کارت برای تعیین حاکم
+      final animData =
+          AnimatedCardData(card: currentCard, targetPosition: currentPlayer);
+      animatedCards.add(animData);
       update();
       await Future.delayed(const Duration(milliseconds: 350));
+      // بعد از انیمیشن، کارت را به دست بازیکن و UI اضافه کن
+      playerCards[currentPlayer]?.add(currentCard);
+      animatedCards.removeWhere((a) => a.key == animData.key);
+      cards.removeAt(currentCardIndex); // حذف کارت از پشته وسط
+      update();
+      await Future.delayed(const Duration(milliseconds: 60));
       if (currentCard.rank == Rank.ace) {
         hokmPlayer.value = currentPlayer;
         showTajAndCircle.value = true;
@@ -1000,14 +1027,25 @@ class GameController extends GetxController {
     final order = _getDistributionOrder(game.hakem);
     for (final dir in order) {
       for (int i = 0; i < numCards; i++) {
-        // کارت را از ابتدای deck بردار و به دست بازیکن و UI اضافه کن
+        // کارت را از ابتدای deck بردار
         final card = game.deck.removeAt(0);
+        // پخش صدای پخش کارت
+        playSound('pakhsh.mp3');
+        // انیمیشن انتقال کارت
+        final animData = AnimatedCardData(
+            card: card, targetPosition: _directionToString(dir));
+        animatedCards.add(animData);
+        update();
+        await Future.delayed(const Duration(milliseconds: 350));
+        // بعد از انیمیشن، کارت را به دست بازیکن و UI اضافه کن
         game.hands[dir.index].add(card);
         card.player = game.players.isNotEmpty ? game.players[dir.index] : null;
         playerCards[_directionToString(dir)]?.add(card);
         cards.removeAt(0); // کارت بالایی را از پشته وسط هم حذف کن
+        animatedCards.removeWhere((a) => a.key == animData.key);
         update();
-        await Future.delayed(const Duration(milliseconds: 300));
+        await Future.delayed(
+            const Duration(milliseconds: 60)); // کمی تاخیر برای طبیعی‌تر شدن
       }
     }
     // بعد از هر مرحله sync کامل
@@ -1111,6 +1149,7 @@ class GameController extends GetxController {
   /// Args:
   ///   card: کارتی که بازیکن قصد بازی کردن آن را دارد.
   void playCard(GameCard card) {
+    print('play card -- ANIM fromPosition: ${currentPlayer.value}');
     if (!canPlayCard(card)) return;
     final dir = Direction.values
         .firstWhere((d) => _directionToString(d) == currentPlayer.value);
@@ -1124,15 +1163,43 @@ class GameController extends GetxController {
       game.players[dir.index].hand
           .removeWhere((c) => c.suit == card.suit && c.rank == card.rank);
     }
+    // تشخیص برش
+    bool isCut = false;
+    if (game.table.isNotEmpty) {
+      final firstSuit = game.table.first.suit;
+      if (card.suit == game.hokm && card.suit != firstSuit) {
+        isCut = true;
+      }
+    }
+    // پخش صدا
+    if (isCut) {
+      playSound('boresh.mp3');
+    } else {
+      playSound('select.wav');
+    }
+    // انیمیشن انتقال کارت به مرکز
+    final animData = PlayedAnimatedCardData(
+      card: card,
+      fromPosition: currentPlayer.value,
+      isCut: isCut,
+    );
+    animatedPlayedCards.add(animData);
+    update();
+    final playedBy = currentPlayer.value; // قبل از Future.delayed ذخیره کن
+
+    Future.delayed(const Duration(milliseconds: 350), () {
+      tableCards[playedBy] = card;
+      print('TABLE CARDS: $tableCards');
+      animatedPlayedCards.removeWhere((a) => a.key == animData.key);
+      update();
+    });
+    if (game.table.isEmpty) {
+      firstSuit.value = card.suit;
+    }
     // بازی کارت با منطق جدید
     game.playCard(card, dir);
     // sync دست بازیکنان با UI (بعد از حذف)
     _syncHandsWithUI();
-    // کارت را به tableCards UI اضافه کن
-    tableCards[currentPlayer.value] = card;
-    if (game.table.length == 1) {
-      firstSuit.value = card.suit;
-    }
     if (game.table.isEmpty) {
       final winner = _directionToString(game.tableDir);
       _endHandUI(winner);
@@ -1308,6 +1375,13 @@ class GameController extends GetxController {
         return '';
     }
   }
+
+  @override
+  void onClose() {
+    _audioPlayer.stop();
+    _audioPlayer.dispose();
+    super.onClose();
+  }
 }
 
 /// کلاس اصلی صفحه بازی حکم
@@ -1340,7 +1414,9 @@ class GameScreen extends StatelessWidget {
                   child: Text('خیر'),
                 ),
                 TextButton(
-                  onPressed: () => Navigator.of(context).pop(true),
+                  onPressed: () {
+                    Navigator.of(context).pop(true);
+                  },
                   child: Text('بله'),
                 ),
               ],
@@ -1389,6 +1465,31 @@ class GameScreen extends StatelessWidget {
                       controller.hokmPlayer.value == 'bottom'
                   ? _buildHokmSelectionDialog()
                   : SizedBox()),
+              // نمایش کارت‌های متحرک بالای همه ویجت‌ها
+              Obx(() => Stack(
+                    children: [
+                      for (final animCard in controller.animatedCards)
+                        AnimatedCard(
+                          key: animCard.key,
+                          card: animCard.card,
+                          targetPosition: animCard.targetPosition,
+                        ),
+                    ],
+                  )),
+              // نمایش کارت‌های متحرک بازی (از دست بازیکن به مرکز)
+              Obx(() => Center(
+                    child: Stack(
+                      children: [
+                        for (final animCard in controller.animatedPlayedCards)
+                          PlayedAnimatedCard(
+                            key: animCard.key,
+                            card: animCard.card,
+                            fromPosition: animCard.fromPosition,
+                            isCut: animCard.isCut,
+                          ),
+                      ],
+                    ),
+                  )),
             ],
           ),
         );
@@ -1483,29 +1584,31 @@ class GameScreen extends StatelessWidget {
                     alignment: Alignment.center,
                     children: [
                       // نمایش کارت‌های روی میز در حالت بازی
-                      Obx(() => controller.isGameStarted.value &&
-                              controller.tableCards.isNotEmpty
-                          ? Positioned(
-                              child: Stack(
-                                children: [
-                                  for (var entry
-                                      in controller.tableCards.entries)
-                                    Align(
-                                      alignment: entry.key == 'left'
-                                          ? Alignment.centerLeft
-                                          : entry.key == 'right'
-                                              ? Alignment.centerRight
-                                              : entry.key == 'top'
-                                                  ? Alignment.topCenter
-                                                  : Alignment.bottomCenter,
-                                      child: CardWidget(
-                                        card: entry.value,
+                      Obx(() {
+                        return controller.isGameStarted.value &&
+                                controller.tableCards.isNotEmpty
+                            ? Positioned(
+                                child: Stack(
+                                  children: [
+                                    for (var entry
+                                        in controller.tableCards.entries)
+                                      Align(
+                                        alignment: entry.key == 'left'
+                                            ? Alignment.centerLeft
+                                            : entry.key == 'right'
+                                                ? Alignment.centerRight
+                                                : entry.key == 'top'
+                                                    ? Alignment.topCenter
+                                                    : Alignment.bottomCenter,
+                                        child: CardWidget(
+                                          card: entry.value,
+                                        ),
                                       ),
-                                    ),
-                                ],
-                              ),
-                            )
-                          : SizedBox()),
+                                  ],
+                                ),
+                              )
+                            : SizedBox();
+                      }),
                       // نمایش کارت‌های پشته فقط زمانی که بازی شروع نشده یا در مرحله تعیین حاکم هستیم
                       if (controller.showCards.value &&
                           controller.cards.isNotEmpty)
@@ -1572,7 +1675,6 @@ class GameScreen extends StatelessWidget {
                                             onTap: () {
                                               final card = controller
                                                   .playerCards['bottom']![i];
-
                                               if (controller.isBottomPlayerTurn
                                                       .value &&
                                                   controller
@@ -1983,3 +2085,23 @@ Set<Suit> opponentPreviouslyCutSuitWithHokm({
 }
 
 // -------------------- پایان توابع کمکی هوش مصنوعی --------------------
+
+/// مدل داده‌ای برای کارت متحرک
+class AnimatedCardData {
+  final GameCard card;
+  final String targetPosition; // 'bottom', 'right', 'top', 'left'
+  final UniqueKey key;
+  AnimatedCardData({required this.card, required this.targetPosition})
+      : key = UniqueKey();
+}
+
+/// مدل داده‌ای برای کارت متحرک هنگام بازی (از دست بازیکن به مرکز)
+class PlayedAnimatedCardData {
+  final GameCard card;
+  final String fromPosition; // 'bottom', 'right', 'top', 'left'
+  final bool isCut; // آیا این کارت برش است؟
+  final UniqueKey key;
+  PlayedAnimatedCardData(
+      {required this.card, required this.fromPosition, this.isCut = false})
+      : key = UniqueKey();
+}

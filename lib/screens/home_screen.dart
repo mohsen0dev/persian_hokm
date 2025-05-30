@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:persian_hokm/screens/abute_me.dart';
 import 'package:persian_hokm/screens/game_screen.dart';
@@ -40,7 +41,7 @@ class HomeScreen extends StatelessWidget {
               ),
             );
           } else {
-            Get.back();
+            SystemNavigator.pop();
           }
         }
       },
