@@ -19,10 +19,26 @@ jobs:
           distribution: "temurin"
           java-version: "17"
 
-      - name: Install Flutter
+      - name: Clone repository
+        uses: actions/checkout@v4
+
+      - name: Set up Flutter
         uses: subosito/flutter-action@v2
+        id: flutter-action
         with:
-          flutter-version: "stable"
+          channel: stable
+          dry-run: true
+        run: |
+          # Always print the latest stable version.
+          echo CHANNEL=${{ steps.flutter-action.outputs.CHANNEL }}
+          echo VERSION=${{ steps.flutter-action.outputs.VERSION }}
+          shell: bash
+
+      # - name: Install Flutter
+      # uses: subosito/flutter-action@v2
+      # with:
+      # flutter-version: "stable"
+      # flutter-version-file: pubspec.yaml
 
       - name: Get dependencies
         run: flutter pub get
