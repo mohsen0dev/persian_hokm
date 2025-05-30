@@ -35,11 +35,6 @@ jobs:
       # flutter-version: "stable"
       # flutter-version-file: pubspec.yaml
 
-      - name: Get dependencies
-        run: flutter pub get
-
-      - name: Build APK
-        run: flutter build apk --release
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
