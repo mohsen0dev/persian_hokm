@@ -28,11 +28,6 @@ jobs:
         with:
           channel: stable
           dry-run: true
-        run: |
-          # Always print the latest stable version.
-          echo CHANNEL=${{ steps.flutter-action.outputs.CHANNEL }}
-          echo VERSION=${{ steps.flutter-action.outputs.VERSION }}
-          shell: bash
 
       # - name: Install Flutter
       # uses: subosito/flutter-action@v2
