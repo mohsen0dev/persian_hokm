@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:persian_hokm/models/card.dart';
+import 'package:persian_hokm/game/models/card.dart';
 
 class CardWidget extends StatelessWidget {
   final GameCard card;

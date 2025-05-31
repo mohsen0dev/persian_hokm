@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:persian_hokm/models/card.dart';
+import 'package:persian_hokm/game/models/card.dart';
 import 'dart:math';
 import 'card_widget.dart';
 

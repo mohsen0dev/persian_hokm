@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
-import 'package:persian_hokm/screens/abute_me.dart';
-import 'package:persian_hokm/screens/game_screen.dart';
-import 'package:persian_hokm/screens/settings_screen.dart';
+import 'package:persian_hokm/game/presentation/pages/abute_me.dart';
+import 'package:persian_hokm/game/presentation/pages/game_screen.dart';
+import 'package:persian_hokm/game/presentation/pages/settings_screen.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});

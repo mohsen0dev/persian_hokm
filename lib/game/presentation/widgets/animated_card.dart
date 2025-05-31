@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:persian_hokm/models/card.dart';
+import 'package:persian_hokm/game/models/card.dart';
 import 'card_widget.dart';
 
 /// ویجت کارت متحرک برای انیمیشن انتقال کارت از مرکز به موقعیت بازیکن
