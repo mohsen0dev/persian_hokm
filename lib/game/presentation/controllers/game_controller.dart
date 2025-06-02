@@ -4,12 +4,14 @@ import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:persian_hokm/game/core/game_logic.dart';
-import 'package:persian_hokm/game/enums.dart';
+import 'package:persian_hokm/game/models/enums.dart';
 import 'package:persian_hokm/game/models/card.dart';
 import 'package:persian_hokm/game/models/player.dart';
 import 'package:persian_hokm/game/models/team.dart';
 import 'package:persian_hokm/game/presentation/pages/game_screen.dart';
 import 'package:persian_hokm/game/presentation/pages/settings_screen.dart';
+import 'package:persian_hokm/game/presentation/widgets/animated_card.dart';
+import 'package:persian_hokm/game/presentation/widgets/played_animated_card.dart';
 
 /// کنترلر اصلی بازی حکم
 /// این کلاس از [GetxController] ارث می‌برد و وضعیت بازی، منطق توزیع کارت، مدیریت نوبت‌ها،
@@ -126,7 +128,7 @@ class GameController extends GetxController {
       final currentPlayer = distributionOrder[currentPlayerIndex];
       playSound('pakhsh.mp3');
       final animData =
-          AnimatedCardData(card: currentCard, targetPosition: currentPlayer);
+          AnimatedCard(card: currentCard, targetPosition: currentPlayer);
       animatedCards.add(animData);
       update();
       await Future.delayed(const Duration(milliseconds: 350));
@@ -224,8 +226,8 @@ class GameController extends GetxController {
       for (int i = 0; i < numCards; i++) {
         final card = game.deck.removeAt(0);
         playSound('pakhsh.mp3');
-        final animData = AnimatedCardData(
-            card: card, targetPosition: _directionToString(dir));
+        final animData =
+            AnimatedCard(card: card, targetPosition: _directionToString(dir));
         animatedCards.add(animData);
         update();
         await Future.delayed(const Duration(milliseconds: 350));
@@ -305,7 +307,6 @@ class GameController extends GetxController {
   }
 
   void playCard(GameCard card) {
-    print('play card -- ANIM fromPosition: ${currentPlayer.value}');
     if (!canPlayCard(card)) return;
     final dir = Direction.values
         .firstWhere((d) => _directionToString(d) == currentPlayer.value);
@@ -329,7 +330,7 @@ class GameController extends GetxController {
     } else {
       playSound('select.wav');
     }
-    final animData = PlayedAnimatedCardData(
+    final animData = PlayedAnimatedCard(
       card: card,
       fromPosition: currentPlayer.value,
       isCut: isCut,
@@ -339,7 +340,6 @@ class GameController extends GetxController {
     final playedBy = currentPlayer.value;
     Future.delayed(const Duration(milliseconds: 350), () {
       tableCards[playedBy] = card;
-      print('TABLE CARDS: $tableCards');
       animatedPlayedCards.removeWhere((a) => a.key == animData.key);
       update();
     });
@@ -377,6 +377,7 @@ class GameController extends GetxController {
   }
 
   Future<void> _endHandUI(String winner) async {
+    await Future.delayed(const Duration(seconds: 5));
     if (winner == 'bottom' || winner == 'top') {
       teamScores['team1']?.value++;
     } else {

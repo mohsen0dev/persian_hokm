@@ -1,7 +1,7 @@
 import 'package:get/get.dart';
 import 'package:persian_hokm/game/models/card.dart';
 import 'package:persian_hokm/game/presentation/pages/settings_screen.dart';
-import 'package:persian_hokm/game/enums.dart';
+import 'package:persian_hokm/game/models/enums.dart';
 import 'package:persian_hokm/game/models/player.dart';
 import 'package:persian_hokm/game/models/team.dart';
 
@@ -23,6 +23,7 @@ class GameLogic {
     newGame();
   }
 
+  //! ساخت یک بازی جدید
   void newGame() {
     for (var h in hands) {
       h.clear();
@@ -35,6 +36,7 @@ class GameLogic {
     lastIndex = deck.length;
   }
 
+  //! ساخت یک deck جدید
   List<GameCard> _getNewDeck() {
     final cards = <GameCard>[];
     for (var suit in Suit.values) {
@@ -46,7 +48,7 @@ class GameLogic {
     return cards;
   }
 
-  /// متد عمومی برای گرفتن یک deck جدید (برای استفاده در UI)
+  //! متد عمومی برای گرفتن یک deck جدید (برای استفاده در UI)
   List<GameCard> getNewDeck() => _getNewDeck();
 
 //! تعیین حاکم
@@ -66,6 +68,7 @@ class GameLogic {
     lastIndex = deck.length;
   }
 
+  //! متد خصوصی برای گرفتن جهت بعدی
   Direction _getNextDirection(Direction direction) {
     switch (direction) {
       case Direction.bottom:

@@ -27,6 +27,7 @@ void main() async {
   runApp(const MyApp());
 }
 
+//! کلاس اصلی
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
@@ -46,6 +47,7 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         fontFamily: 'Vazirmatn',
       ),
+      //! صفحه اصلی
       home: const HomeScreen(),
     );
   }

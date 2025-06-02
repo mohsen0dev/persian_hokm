@@ -1,16 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+
 import 'package:persian_hokm/game/models/card.dart';
 import 'package:persian_hokm/game/presentation/controllers/game_controller.dart';
 import 'package:persian_hokm/game/presentation/pages/settings_screen.dart';
 import 'package:persian_hokm/game/presentation/widgets/animated_card.dart';
 import 'package:persian_hokm/game/presentation/widgets/card_widget.dart';
 import 'package:persian_hokm/game/presentation/widgets/played_animated_card.dart';
-import 'package:persian_hokm/game/models/player.dart';
-import 'package:persian_hokm/game/enums.dart';
 
-/// کلاس اصلی صفحه بازی حکم
-/// این کلاس واسط کاربری بازی را نمایش می‌دهد و با GameController برای مدیریت منطق بازی تعامل دارد.
 class GameScreen extends StatelessWidget {
   /// کنترلر اصلی بازی که منطق و وضعیت بازی را مدیریت می‌کند.
   final controller = Get.put(GameController());
@@ -18,10 +15,8 @@ class GameScreen extends StatelessWidget {
   /// کنترلر تنظیمات برای دسترسی به تنظیمات پس‌زمینه و غیره.
   final settingsController = Get.put(SettingsController());
 
-  /// سازنده کلاس GameScreen.
   GameScreen({super.key});
 
-  /// متد اصلی ساخت واسط کاربری صفحه بازی.
   @override
   Widget build(BuildContext context) {
     return PopScope(
@@ -123,9 +118,6 @@ class GameScreen extends StatelessWidget {
   }
 
   /// نمایش اطلاعات بالای صفحه شامل امتیازات و خال حکم انتخاب شده.
-  ///
-  /// Returns:
-  ///   ویجت Positioned حاوی اطلاعات بالای صفحه.
   Widget textTop() {
     return Positioned(
       top: 50,
@@ -167,13 +159,6 @@ class GameScreen extends StatelessWidget {
   }
 
   /// ساختار پس‌زمینه متنی برای نمایش امتیازات و حکم.
-  /// یک Container با استایل خاص (پس‌زمینه خاکستری و گوشه‌های گرد) ایجاد می‌کند.
-  ///
-  /// Args:
-  ///   child: ویجت فرزند که درون Container قرار می‌گیرد (مانند متن امتیازات).
-  ///
-  /// Returns:
-  ///   ویجت Container با استایل پس‌زمینه.
   Container bkgText({required Widget child}) {
     return Container(
         padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -184,11 +169,7 @@ class GameScreen extends StatelessWidget {
         child: child);
   }
 
-  /// نمایش پشته کارت‌ها در مرکز صفحه (قبل از شروع بازی) یا کارت‌های روی میز (هنگام بازی).
-  /// وضعیت‌های مختلف (نمایش دکمه شروع، نمایش پشته کارت یا کارت‌های روی میز) را مدیریت می‌کند.
-  ///
-  /// Returns:
-  ///   ویجت Positioned حاوی Stack برای نمایش کارت‌های مرکز.
+  /// کارت های مرکزی
   Widget cardCenter() {
     return Positioned(
       bottom: 0,
@@ -252,11 +233,6 @@ class GameScreen extends StatelessWidget {
   }
 
   /// نمایش کارت‌های بازیکن پایین (بازیکن انسانی).
-  /// موقعیت کارت‌ها را در پایین صفحه مدیریت می‌کند و امکان تعامل با کارت‌ها (انتخاب برای بازی) را فراهم می‌سازد.
-  /// همچنین تاج حاکم را در صورت لزوم نمایش می‌دهد.
-  ///
-  /// Returns:
-  ///   ویجت Positioned حاوی کارت‌های بازیکن پایین.
   Widget cardBotton() {
     return Builder(
         builder: (context) => Obx(
@@ -326,10 +302,6 @@ class GameScreen extends StatelessWidget {
   }
 
   /// نمایش کارت‌های بازیکن چپ (هوش مصنوعی حریف).
-  /// کارت‌ها را در سمت چپ صفحه به صورت عمودی نمایش می‌دهد و تاج حاکم را در صورت لزوم نمایش می‌دهد.
-  ///
-  /// Returns:
-  ///   ویجت Positioned حاوی کارت‌های بازیکن چپ.
   Widget cardLeft() {
     return Builder(
         builder: (context) => Obx(() => Positioned(
@@ -350,8 +322,11 @@ class GameScreen extends StatelessWidget {
                 Center(
                   child: Obx(
                     () => controller.playerCards['left']?.isNotEmpty ?? false
-                        ? SizedBox(
-                            height: 330,
+                        ? Container(
+                            color: Colors.amber,
+                            height:
+                                (controller.playerCards['left']!.length * 20) +
+                                    65,
                             width: 65,
                             child: Stack(
                               children: [
@@ -359,10 +334,7 @@ class GameScreen extends StatelessWidget {
                                     i < controller.playerCards['left']!.length;
                                     i++)
                                   Positioned(
-                                    top: i *
-                                        (MediaQuery.of(context).size.height *
-                                            0.14 *
-                                            0.4),
+                                    top: i * 20,
                                     child: CardWidget(
                                       card: controller.playerCards['left']![i],
                                     ),
@@ -378,10 +350,6 @@ class GameScreen extends StatelessWidget {
   }
 
   /// نمایش کارت‌های بازیکن راست (هوش مصنوعی حریف).
-  /// کارت‌ها را در سمت راست صفحه به صورت عمودی نمایش می‌دهد و تاج حاکم را در صورت لزوم نمایش می‌دهد.
-  ///
-  /// Returns:
-  ///   ویجت Positioned حاوی کارت‌های بازیکن راست.
   Widget cardRight() {
     return Builder(
       builder: (context) => Obx(
@@ -390,33 +358,32 @@ class GameScreen extends StatelessWidget {
           bottom: 0,
           top: 0,
           child: Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Center(
-                child: Obx(
-                  () => controller.playerCards['right']?.isNotEmpty ?? false
-                      ? SizedBox(
-                          height: 330,
-                          width: 65,
-                          child: Stack(
-                            alignment: Alignment.center,
-                            children: [
-                              for (int i = 0;
-                                  i < controller.playerCards['right']!.length;
-                                  i++)
-                                Positioned(
-                                  top: i *
-                                      (MediaQuery.of(context).size.height *
-                                          0.14 *
-                                          0.4),
-                                  child: CardWidget(
-                                    card: controller.playerCards['right']![i],
-                                  ),
+              Obx(
+                () => controller.playerCards['right']?.isNotEmpty ?? false
+                    ? Container(
+                        color: Colors.amber,
+                        height:
+                            (controller.playerCards['right']!.length * 20) + 65,
+                        width: 65,
+                        child: Stack(
+                          alignment: Alignment.center,
+                          children: [
+                            for (int i = 0;
+                                i < controller.playerCards['right']!.length;
+                                i++)
+                              Positioned(
+                                top: i * 20,
+                                child: CardWidget(
+                                  card: controller.playerCards['right']![i],
                                 ),
-                            ],
-                          ),
-                        )
-                      : SizedBox(),
-                ),
+                              ),
+                          ],
+                        ),
+                      )
+                    : SizedBox(),
               ),
               SizedBox(width: 6),
               Column(
@@ -433,11 +400,7 @@ class GameScreen extends StatelessWidget {
     );
   }
 
-  /// نمایش کارت‌های بازیکن بالا (هوش مصنوعی یار).
-  /// کارت‌ها را در بالای صفحه به صورت افقی نمایش می‌دهد و تاج حاکم را در صورت لزوم نمایش می‌دهد.
-  ///
-  /// Returns:
-  ///   ویجت Positioned حاوی کارت‌های بازیکن بالا.
+  /// کارت های بازیکن بالا (هوش مصنوعی یار)
   Widget cardTop() {
     return Builder(
         builder: (context) => Obx(
@@ -450,18 +413,18 @@ class GameScreen extends StatelessWidget {
                     Center(
                       child: Obx(
                         () => controller.playerCards['top']?.isNotEmpty ?? false
-                            ? SizedBox(
+                            ? Container(
+                                color: Colors.amber,
                                 height: 88,
-                                width: 250,
+                                width:
+                                    controller.playerCards['top']!.length * 15 +
+                                        45,
                                 child: Stack(children: [
                                   for (int i = 0;
                                       i < controller.playerCards['top']!.length;
                                       i++)
                                     Positioned(
-                                      right: i *
-                                          (MediaQuery.of(context).size.width *
-                                              0.19 *
-                                              0.09),
+                                      right: i * 15,
                                       child: CardWidget(
                                         card: controller.playerCards['top']![i],
                                       ),
@@ -484,10 +447,6 @@ class GameScreen extends StatelessWidget {
             ));
   }
 
-  /// ویجت‌های نمایش دهنده تاج حاکم.
-  ///
-  /// Returns:
-  ///   لیستی از ویجت‌ها (شامل عکس تاج).
   List<Widget> tajAnCir() {
     return [
       Image.asset(
@@ -498,10 +457,6 @@ class GameScreen extends StatelessWidget {
   }
 
   /// ساخت دیالوگ انتخاب خال حکم برای بازیکن انسانی.
-  /// زمانی نمایش داده می‌شود که حاکم بازیکن پایین باشد و نیاز به انتخاب حکم باشد.
-  ///
-  /// Returns:
-  ///   ویجت Container حاوی دیالوگ انتخاب حکم.
   Widget _buildHokmSelectionDialog() {
     return Container(
       color: Colors.black54,
@@ -541,13 +496,6 @@ class GameScreen extends StatelessWidget {
   }
 
   /// ساخت دکمه انتخاب یک خال خاص در دیالوگ انتخاب حکم.
-  ///
-  /// Args:
-  ///   suit: خال مربوط به دکمه (Hearts, Clubs, Diamonds, Spades).
-  ///   imageName: نام فایل عکس مربوط به خال.
-  ///
-  /// Returns:
-  ///   ویجت InkWell حاوی دکمه انتخاب خال.
   Widget _buildSuitButton(Suit suit, String imageName) {
     return InkWell(
       onTap: () => controller.selectHokm(suit),
@@ -567,12 +515,6 @@ class GameScreen extends StatelessWidget {
   }
 
   /// گرفتن نام فایل عکس مربوط به یک خال.
-  ///
-  /// Args:
-  ///   suit: خال مورد نظر.
-  ///
-  /// Returns:
-  ///   نام فایل عکس (String) مربوط به خال.
   String _getSuitImageName(Suit suit) {
     switch (suit) {
       case Suit.hearts:
@@ -585,148 +527,4 @@ class GameScreen extends StatelessWidget {
         return 'spades.png';
     }
   }
-}
-
-// -------------------- توابع کمکی هوش مصنوعی پیشرفته --------------------
-
-/// بررسی اینکه آیا کارت داده شده قوی‌ترین کارت باقی‌مانده از آن خال است یا نه
-bool isStrongestCard(GameCard card, List<GameCard> playedCards) {
-  final suit = card.suit;
-  final playedRanks =
-      playedCards.where((c) => c.suit == suit).map((c) => c.rank).toSet();
-  // اگر همه کارت‌های قوی‌تر بازی شده‌اند، این کارت قوی‌ترین است
-  return Rank.values
-      .where((r) => r.index < card.rank.index)
-      .every((r) => playedRanks.contains(r));
-}
-
-/// پیدا کردن ضعیف‌ترین کارت از یک لیست کارت
-GameCard weakestCard(List<GameCard> cards) {
-  return cards.reduce((a, b) => a.rank.index < b.rank.index ? b : a);
-}
-
-/// پیدا کردن قوی‌ترین کارت از یک لیست کارت
-GameCard strongestCard(List<GameCard> cards) {
-  return cards.reduce((a, b) => a.rank.index < b.rank.index ? a : b);
-}
-
-/// بررسی اینکه آیا یار در دست قبلی یک خال را برید و تو هم از آن خال داری
-GameCard? partnerCutSuitAndYouHaveIt({
-  required Direction myDirection,
-  required List<GameCard> hand,
-  required List<List<GameCard>> tableHistory,
-  required Suit hokm,
-}) {
-  if (tableHistory.isEmpty) return null;
-  final lastHand = tableHistory.last;
-  final leadSuit = lastHand.first.suit;
-  // تعیین یار
-  final partnerDir = myDirection == Direction.bottom
-      ? Direction.top
-      : myDirection == Direction.top
-          ? Direction.bottom
-          : myDirection == Direction.left
-              ? Direction.right
-              : Direction.left;
-  final partnerCard = lastHand[partnerDir.index];
-  // اگر یار حکم انداخته و خال اصلی را نداشته
-  if (partnerCard.suit == hokm && partnerCard.suit != leadSuit) {
-    final mySuitCards = hand.where((c) => c.suit == leadSuit).toList();
-    if (mySuitCards.isNotEmpty) {
-      // آیا قوی‌ترین کارت را داری؟
-      final playedSuitCards = tableHistory
-          .expand((l) => l)
-          .where((c) => c.suit == leadSuit)
-          .toList();
-      for (final card in mySuitCards) {
-        if (isStrongestCard(card, playedSuitCards)) {
-          return card;
-        }
-      }
-      // اگر قوی‌ترین را نداری، ضعیف‌ترین کارت را بازی کن
-      return weakestCard(mySuitCards);
-    }
-  }
-  return null;
-}
-
-/// بررسی اینکه آیا حریف کارت قوی از یک خال دارد و تو هم از آن خال داری، سعی کن آن خال را بازی نکنی
-GameCard? avoidStrongOpponentSuit({
-  required List<GameCard> hand,
-  required List<List<GameCard>> tableHistory,
-  required Suit hokm,
-}) {
-  for (final suit in Suit.values.where((s) => s != hokm)) {
-    final mySuitCards = hand.where((c) => c.suit == suit).toList();
-    if (mySuitCards.isEmpty) continue;
-    final playedSuitCards =
-        tableHistory.expand((l) => l).where((c) => c.suit == suit).toList();
-    bool acePlayed = playedSuitCards.any((c) => c.rank == Rank.ace);
-    bool kingPlayed = playedSuitCards.any((c) => c.rank == Rank.king);
-    if (!acePlayed || !kingPlayed) {
-      // سعی کن این خال را بازی نکنی
-      continue;
-    }
-    // اگر مجبور شدی، ضعیف‌ترین کارت را بازی کن
-    return weakestCard(mySuitCards);
-  }
-  return null;
-}
-
-/// بررسی اینکه آیا یک حریف قبلا یک خال غیر حکم را با حکم بریده است
-Set<Suit> opponentPreviouslyCutSuitWithHokm({
-  required List<List<GameCard>> tableHistory,
-  required Suit hokm,
-  required Direction myDirection,
-  required List<Player> players,
-}) {
-  final cutSuits = <Suit>{};
-  final myPartnerDir = myDirection == Direction.bottom
-      ? Direction.top
-      : myDirection == Direction.top
-          ? Direction.bottom
-          : myDirection == Direction.left
-              ? Direction.right
-              : Direction.left;
-
-  for (final hand in tableHistory) {
-    if (hand.length != 4) continue; // Sanity check
-
-    final leadCard = hand.first;
-    final winningCard = strongestCard(hand);
-    final winnerPlayer = winningCard.player!;
-
-    // Check if the winner was an opponent (not me and not my partner)
-    if (winnerPlayer.direction != myDirection &&
-        winnerPlayer.direction != myPartnerDir) {
-      // Check if the winning card was hokm and played on a non-hokm lead suit
-      if (winningCard.suit == hokm && leadCard.suit != hokm) {
-        cutSuits.add(leadCard.suit);
-      }
-    }
-  }
-
-  return cutSuits;
-}
-
-// -------------------- پایان توابع کمکی هوش مصنوعی --------------------
-
-/// مدل داده‌ای برای کارت متحرک
-class AnimatedCardData {
-  final GameCard card;
-  final String targetPosition; // 'bottom', 'right', 'top', 'left'
-  final UniqueKey key;
-  AnimatedCardData({required this.card, required this.targetPosition})
-      : key = UniqueKey();
-}
-
-/// مدل داده‌ای برای کارت متحرک هنگام بازی (از دست بازیکن به مرکز)
-class PlayedAnimatedCardData {
-  final GameCard card;
-  final String fromPosition; // 'bottom', 'right', 'top', 'left'
-  final bool isCut; // آیا این کارت برش است؟
-  final UniqueKey key;
-  PlayedAnimatedCardData(
-      {required this.card, required this.fromPosition, this.isCut = false})
-      : key = UniqueKey();
 }

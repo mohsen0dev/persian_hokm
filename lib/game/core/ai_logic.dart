@@ -1,4 +1,4 @@
-import 'package:persian_hokm/game/enums.dart';
+import 'package:persian_hokm/game/models/enums.dart';
 import 'package:persian_hokm/game/models/card.dart';
 import 'package:persian_hokm/game/models/player.dart';
 
