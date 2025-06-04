@@ -18,8 +18,25 @@ GameCard weakestCard(List<GameCard> cards) {
   return cards.reduce((a, b) => a.rank.index < b.rank.index ? b : a);
 }
 
-/// پیدا کردن قوی‌ترین کارت از یک لیست کارت
-GameCard strongestCard(List<GameCard> cards) {
+/// پیدا کردن قوی‌ترین کارت یا برنده از یک لیست کارت
+GameCard strongestCard(List<GameCard> cards, {Suit? hokm, Suit? leadSuit}) {
+  // اگر حکم مشخص شده و کارت حکم وجود دارد
+  if (hokm != null) {
+    final hokmCards = cards.where((c) => c.suit == hokm).toList();
+    if (hokmCards.isNotEmpty) {
+      // قوی‌ترین حکم (کمترین index یعنی بالاترین رتبه)
+      return hokmCards.reduce((a, b) => a.rank.index < b.rank.index ? a : b);
+    }
+  }
+  // اگر خال اصلی مشخص شده و کارت همان خال وجود دارد
+  if (leadSuit != null) {
+    final leadSuitCards = cards.where((c) => c.suit == leadSuit).toList();
+    if (leadSuitCards.isNotEmpty) {
+      return leadSuitCards
+          .reduce((a, b) => a.rank.index < b.rank.index ? a : b);
+    }
+  }
+  // در غیر این صورت، قوی‌ترین کارت بر اساس rank
   return cards.reduce((a, b) => a.rank.index < b.rank.index ? a : b);
 }
 
@@ -106,7 +123,7 @@ Set<Suit> opponentPreviouslyCutSuitWithHokm({
     if (hand.length != 4) continue; // Sanity check
 
     final leadCard = hand.first;
-    final winningCard = strongestCard(hand);
+    final winningCard = strongestCard(hand, hokm: hokm);
     final winnerPlayer = winningCard.player!;
 
     // Check if the winner was an opponent (not me and not my partner)

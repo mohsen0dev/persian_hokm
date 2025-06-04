@@ -120,7 +120,7 @@ class GameScreen extends StatelessWidget {
   /// نمایش اطلاعات بالای صفحه شامل امتیازات و خال حکم انتخاب شده.
   Widget textTop() {
     return Positioned(
-      top: 50,
+      top: 20,
       left: 0,
       right: 0,
       child: Row(
@@ -163,7 +163,7 @@ class GameScreen extends StatelessWidget {
     return Container(
         padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         decoration: BoxDecoration(
-          color: Colors.grey.shade700,
+          color: Colors.grey.shade700.withOpacity(0.5),
           borderRadius: BorderRadius.circular(12),
         ),
         child: child);
@@ -279,15 +279,31 @@ class GameScreen extends StatelessWidget {
                                               if (controller.isBottomPlayerTurn
                                                       .value &&
                                                   controller
-                                                      .canPlayCard(card)) {
+                                                      .isCardPlayable(card)) {
                                                 controller.playCard(card);
                                               }
                                             },
-                                            child: CardWidget(
-                                              card: controller
-                                                  .playerCards['bottom']![i],
-                                              isSelectable: controller
-                                                  .isBottomPlayerTurn.value,
+                                            child: Builder(
+                                              builder: (context) {
+                                                final card = controller
+                                                    .playerCards['bottom']![i];
+                                                final canPlay = controller
+                                                    .isCardPlayable(card);
+                                                return CardWidget(
+                                                  card: card,
+                                                  isSelectable: controller
+                                                          .isBottomPlayerTurn
+                                                          .value &&
+                                                      canPlay,
+                                                  borderColor: controller
+                                                          .isBottomPlayerTurn
+                                                          .value
+                                                      ? (canPlay
+                                                          ? Colors.blue
+                                                          : Colors.red)
+                                                      : Colors.black26,
+                                                );
+                                              },
                                             ),
                                           ),
                                         ),
@@ -305,25 +321,27 @@ class GameScreen extends StatelessWidget {
   Widget cardLeft() {
     return Builder(
         builder: (context) => Obx(() => Positioned(
-            left: (controller.cardPositions['left']?.value ?? 50) + 50,
+            left: (controller.cardPositions['left']?.value ?? 50) + 46,
             bottom: 0,
             top: 0,
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(controller.getPlayerName('left')),
-                    if (controller.hokmPlayer.value == 'left') ...tajAnCir(),
-                  ],
+                bkgText(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(controller.getPlayerName('left')),
+                      if (controller.hokmPlayer.value == 'left') ...tajAnCir(),
+                    ],
+                  ),
                 ),
                 SizedBox(width: 6),
                 Center(
                   child: Obx(
                     () => controller.playerCards['left']?.isNotEmpty ?? false
-                        ? Container(
-                            color: Colors.amber,
+                        ? SizedBox(
                             height:
                                 (controller.playerCards['left']!.length * 20) +
                                     65,
@@ -363,8 +381,7 @@ class GameScreen extends StatelessWidget {
             children: [
               Obx(
                 () => controller.playerCards['right']?.isNotEmpty ?? false
-                    ? Container(
-                        color: Colors.amber,
+                    ? SizedBox(
                         height:
                             (controller.playerCards['right']!.length * 20) + 65,
                         width: 65,
@@ -386,12 +403,15 @@ class GameScreen extends StatelessWidget {
                     : SizedBox(),
               ),
               SizedBox(width: 6),
-              Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(controller.getPlayerName('right')),
-                  if (controller.hokmPlayer.value == 'right') ...tajAnCir()
-                ],
+              bkgText(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(controller.getPlayerName('right')),
+                    if (controller.hokmPlayer.value == 'right') ...tajAnCir()
+                  ],
+                ),
               ),
             ],
           ),
@@ -413,8 +433,7 @@ class GameScreen extends StatelessWidget {
                     Center(
                       child: Obx(
                         () => controller.playerCards['top']?.isNotEmpty ?? false
-                            ? Container(
-                                color: Colors.amber,
+                            ? SizedBox(
                                 height: 88,
                                 width:
                                     controller.playerCards['top']!.length * 15 +
@@ -434,12 +453,16 @@ class GameScreen extends StatelessWidget {
                       ),
                     ),
                     SizedBox(height: 6),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text(controller.getPlayerName('top')),
-                        if (controller.hokmPlayer.value == 'top') ...tajAnCir()
-                      ],
+                    bkgText(
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(controller.getPlayerName('top')),
+                          if (controller.hokmPlayer.value == 'top')
+                            ...tajAnCir()
+                        ],
+                      ),
                     ),
                   ],
                 ),

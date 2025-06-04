@@ -3,19 +3,17 @@ import 'dart:math';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+
 import 'package:persian_hokm/game/core/game_logic.dart';
 import 'package:persian_hokm/game/models/enums.dart';
 import 'package:persian_hokm/game/models/card.dart';
 import 'package:persian_hokm/game/models/player.dart';
 import 'package:persian_hokm/game/models/team.dart';
-import 'package:persian_hokm/game/presentation/pages/game_screen.dart';
 import 'package:persian_hokm/game/presentation/pages/settings_screen.dart';
 import 'package:persian_hokm/game/presentation/widgets/animated_card.dart';
 import 'package:persian_hokm/game/presentation/widgets/played_animated_card.dart';
 
 /// کنترلر اصلی بازی حکم
-/// این کلاس از [GetxController] ارث می‌برد و وضعیت بازی، منطق توزیع کارت، مدیریت نوبت‌ها،
-/// بازی کردن کارت‌ها، امتیازدهی و تشخیص برنده را مدیریت می‌کند.
 class GameController extends GetxController {
   final cards = <GameCard>[].obs;
   final currentCardIndex = 0.obs;
@@ -436,6 +434,23 @@ class GameController extends GetxController {
           playerCards['bottom']!.any((c) => c.suit == firstSuit.value);
       if (hasFirstSuitCard) {
         snackMessage(title: 'کارت  نامعتبر !!!');
+        return false;
+      }
+    }
+    return true;
+  }
+
+  bool isCardPlayable(GameCard card) {
+    if (!isBottomPlayerTurn.value) {
+      return false;
+    }
+    if (tableCards.isEmpty) {
+      return true;
+    }
+    if (card.suit != firstSuit.value) {
+      final hasFirstSuitCard =
+          playerCards['bottom']!.any((c) => c.suit == firstSuit.value);
+      if (hasFirstSuitCard) {
         return false;
       }
     }

@@ -4,11 +4,13 @@ import 'package:persian_hokm/game/models/card.dart';
 class CardWidget extends StatelessWidget {
   final GameCard card;
   final bool isSelectable;
+  final Color borderColor;
 
   const CardWidget({
     super.key,
     required this.card,
     this.isSelectable = false,
+    this.borderColor = Colors.black26,
   });
 
   @override
@@ -18,13 +20,13 @@ class CardWidget extends StatelessWidget {
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(10),
         border: Border.all(
-          color: isSelectable ? Colors.blue : Colors.red,
+          color: borderColor,
           width: isSelectable ? 2 : 1,
         ),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.2),
-            blurRadius: 1,
+            blurRadius: 2,
             offset: const Offset(3, 3),
           ),
         ],
