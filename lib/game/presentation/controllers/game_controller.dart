@@ -50,8 +50,16 @@ class GameController extends GetxController {
   late GameLogic game;
   final animatedCards = <dynamic>[].obs;
   final animatedPlayedCards = <dynamic>[].obs;
+  final teamSets = {
+    'team1': 0.obs,
+    'team2': 0.obs,
+  }.obs;
+  final team1WonHands = <int>[].obs;
+  final team2WonHands = <int>[].obs;
   BuildContext get context => Get.context!;
   final AudioPlayer _audioPlayer = AudioPlayer();
+  Direction? currentHakemDir;
+  bool isFirstGame = true;
 
   Future<void> playSound(String name) async {
     try {
@@ -68,6 +76,9 @@ class GameController extends GetxController {
   }
 
   void _initializeCards() {
+    tableCards.clear();
+    animatedPlayedCards.clear();
+    firstSuit.value = null;
     cards.clear();
     for (var list in playerCards.values) {
       list.clear();
@@ -95,10 +106,79 @@ class GameController extends GetxController {
     showStartButton.value = false;
     showCards.value = true;
     isGameStarted.value = false;
-    await _distributeCardsForHakem();
+    if (isFirstGame) {
+      await _distributeCardsForHakem();
+      isFirstGame = false;
+    } else {
+      await startGameWithHakem(currentHakemDir!);
+    }
+  }
+
+  Future<void> startGameWithHakem(Direction hakemDir) async {
+    for (var h in game.hands) {
+      h.clear();
+    }
+    game.tableHistory.clear();
+    showStartButton.value = false;
+    showCards.value = true;
+    isGameStarted.value = false;
+    currentHakemDir = hakemDir;
+    hokmPlayer.value = _directionToString(hakemDir);
+    game.hakem = hakemDir;
+    final newDeck = game.getNewDeck();
+    newDeck.shuffle(Random());
+    cards.clear();
+    cards.addAll(newDeck);
+    game.deck = List.from(newDeck);
+    for (var list in playerCards.values) {
+      list.clear();
+    }
+    showTajAndCircle.value = false;
+    selectedHokm.value = null;
+    showHokmDialog.value = false;
+    isFirstDistributionDone.value = false;
+    isSecondDistributionDone.value = false;
+    isThirdDistributionDone.value = false;
+    cardPositions.value = {
+      'left': (-50.0).obs,
+      'right': (-50.0).obs,
+      'top': (-60.0).obs,
+    };
+    if (game.players.isEmpty) {
+      final aiLevel = Get.find<SettingsController>().aiLevel.value;
+      game.players = [
+        PlayerHuman(
+            'شما', game.hands[Direction.bottom.index], Direction.bottom),
+        PlayerAI('حریف1', Direction.right, game.hands[Direction.right.index],
+            aiLevel: aiLevel, isPartner: false),
+        PlayerAI('یار شما', Direction.top, game.hands[Direction.top.index],
+            aiLevel: aiLevel, isPartner: true),
+        PlayerAI('حریف2', Direction.left, game.hands[Direction.left.index],
+            aiLevel: aiLevel, isPartner: false),
+      ];
+      game.teams = [
+        Team(game.players[0], game.players[2]),
+        Team(game.players[1], game.players[3]),
+      ];
+      game.players[0].team = game.teams[0];
+      game.players[2].team = game.teams[0];
+      game.players[1].team = game.teams[1];
+      game.players[3].team = game.teams[1];
+    }
+    await _dealCardsStepByStep(5);
+    if (hakemDir == Direction.bottom) {
+      showHokmDialog.value = true;
+    } else {
+      final aiHokm = game.players[hakemDir.index].determineHokm();
+      selectHokm(aiHokm);
+    }
   }
 
   Future<void> _distributeCardsForHakem() async {
+    for (var h in game.hands) {
+      h.clear();
+    }
+    game.tableHistory.clear();
     final newDeck = game.getNewDeck();
     newDeck.shuffle(Random());
     cards.clear();
@@ -167,6 +247,7 @@ class GameController extends GetxController {
         'top': (-60.0).obs,
       };
       game.hakem = _stringToDirection(hokmPlayer.value);
+      currentHakemDir = game.hakem;
       await _dealCardsStepByStep(5);
       if (game.players.isEmpty) {
         final aiLevel = Get.find<SettingsController>().aiLevel.value;
@@ -375,15 +456,17 @@ class GameController extends GetxController {
   }
 
   Future<void> _endHandUI(String winner) async {
-    await Future.delayed(const Duration(seconds: 5));
+    await Future.delayed(const Duration(seconds: 2));
     if (winner == 'bottom' || winner == 'top') {
       teamScores['team1']?.value++;
+      team1WonHands.add(1);
     } else {
       teamScores['team2']?.value++;
+      team2WonHands.add(1);
     }
     if (teamScores['team1']?.value == 7 || teamScores['team2']?.value == 7) {
       await Future.delayed(const Duration(seconds: 1));
-      _endGame();
+      _endSet();
       return;
     }
     await Future.delayed(const Duration(seconds: 2));
@@ -398,13 +481,62 @@ class GameController extends GetxController {
     }
   }
 
+  void _endSet() {
+    String winningTeam;
+    if (teamScores['team1']?.value == 7) {
+      teamSets['team1']?.value++;
+      winningTeam = 'team1';
+    } else {
+      teamSets['team2']?.value++;
+      winningTeam = 'team2';
+    }
+    teamScores['team1']?.value = 0;
+    teamScores['team2']?.value = 0;
+    team1WonHands.clear();
+    team2WonHands.clear();
+
+    bool hakemTeamWon = (currentHakemDir == Direction.bottom ||
+            currentHakemDir == Direction.top)
+        ? winningTeam == 'team1'
+        : winningTeam == 'team2';
+    if (!hakemTeamWon) {
+      currentHakemDir = Direction.values[(currentHakemDir!.index + 1) % 4];
+    }
+    game.hakem = currentHakemDir!;
+    hokmPlayer.value = _directionToString(currentHakemDir!);
+
+    if (teamSets['team1']?.value == 7 || teamSets['team2']?.value == 7) {
+      _endGame();
+      return;
+    }
+    Get.dialog(
+      AlertDialog(
+        title: Text('ست جدید'),
+        content: Text(winningTeam == 'team1'
+            ? 'شما و یار یک ست بردید!'
+            : 'حریفان یک ست بردند!'),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Get.back();
+              _initializeCards();
+              startGame();
+            },
+            child: Text('ادامه'),
+          ),
+        ],
+      ),
+      barrierDismissible: false,
+    );
+  }
+
   void _endGame() {
-    final winningTeam = teamScores['team1']?.value == 7 ? 'team1' : 'team2';
+    final winningTeam = teamSets['team1']?.value == 7 ? 'team1' : 'team2';
     final winningTeamName = winningTeam == 'team1' ? 'شما ' : 'حریف ';
     Get.dialog(
       AlertDialog(
         title: Text('پایان بازی'),
-        content: Text('$winningTeamName برنده شدند!'),
+        content: Text('$winningTeamName برنده نهایی شدند!'),
         actions: [
           TextButton(
             onPressed: () {
@@ -415,6 +547,7 @@ class GameController extends GetxController {
           ),
         ],
       ),
+      barrierDismissible: false,
     );
   }
 

@@ -68,7 +68,7 @@ class GameScreen extends StatelessWidget {
                         ),
                       ),
                     ),
-              textTop(),
+              textTop(context),
               cardCenter(),
               Obx(() => controller.showCards.value ? cardBotton() : SizedBox()),
               Obx(() => controller.showCards.value ? cardLeft() : SizedBox()),
@@ -118,24 +118,82 @@ class GameScreen extends StatelessWidget {
   }
 
   /// نمایش اطلاعات بالای صفحه شامل امتیازات و خال حکم انتخاب شده.
-  Widget textTop() {
+  Widget textTop(BuildContext context) {
     return Positioned(
-      top: 20,
-      left: 0,
-      right: 0,
+      top: 45,
+      left: 60,
+      right: 50,
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceAround,
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          bkgText(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                Obx(() => Text(
-                    'شما و یار: ${controller.teamScores['team1']?.value}')),
-                Obx(() =>
-                    Text('حریفان: ${controller.teamScores['team2']?.value}')),
-              ],
-            ),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              bkgText(
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        Obx(() => Text('شما و یار: ست: '
+                            '${controller.teamSets['team1']?.value}  |  دست: ${controller.teamScores['team1']?.value}')),
+                      ],
+                    ),
+                    SizedBox(width: 8),
+                    Obx(() => Row(
+                          children: [
+                            for (int i = 0;
+                                i < controller.team1WonHands.length;
+                                i++)
+                              Padding(
+                                padding:
+                                    const EdgeInsets.symmetric(horizontal: 1.5),
+                                child: Image.asset(
+                                  settingsController.cardBackImages[
+                                      settingsController.cardBackIndex.value],
+                                  width: 18,
+                                  height: 24,
+                                ),
+                              ),
+                          ],
+                        )),
+                  ],
+                ),
+              ),
+              bkgText(
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        Obx(() => Text('حریــفان: ست: '
+                            '${controller.teamSets['team2']?.value}  |  دست: ${controller.teamScores['team2']?.value}')),
+                      ],
+                    ),
+                    SizedBox(width: 8),
+                    Obx(() => Row(
+                          children: [
+                            for (int i = 0;
+                                i < controller.team2WonHands.length;
+                                i++)
+                              Padding(
+                                padding:
+                                    const EdgeInsets.symmetric(horizontal: 1.5),
+                                child: Image.asset(
+                                  settingsController.cardBackImages[
+                                      settingsController.cardBackIndex.value],
+                                  width: 18,
+                                  height: 24,
+                                ),
+                              ),
+                          ],
+                        )),
+                  ],
+                ),
+              ),
+            ],
           ),
           Obx(() => controller.selectedHokm.value != null
               ? bkgText(
@@ -145,9 +203,12 @@ class GameScreen extends StatelessWidget {
                         'حکم ',
                         style: TextStyle(fontWeight: FontWeight.bold),
                       ),
-                      Image.asset(
-                        'assets/drawables/${_getSuitImageName(controller.selectedHokm.value!)}',
-                        width: 20,
+                      InkWell(
+                        onTap: () => _showPlayedCardsDialog(context),
+                        child: Image.asset(
+                          'assets/drawables/${_getSuitImageName(controller.selectedHokm.value!)}',
+                          width: 20,
+                        ),
                       ),
                     ],
                   ),
@@ -245,71 +306,79 @@ class GameScreen extends StatelessWidget {
                     if (controller.hokmPlayer.value == 'bottom') ...tajAnCir(),
                     SizedBox(height: 6),
                     Center(
-                      child: Obx(
-                        () => controller.playerCards['bottom']?.isNotEmpty ??
-                                false
-                            ? SizedBox(
-                                height: 88,
-                                width:
-                                    controller.playerCards['bottom']!.length *
-                                            (MediaQuery.of(context).size.width *
-                                                0.0526) +
-                                        30,
-                                // width: MediaQuery.of(context).size.width * 0.7,
-                                child: Stack(
-                                    // alignment: Alignment.center,
-                                    children: [
-                                      for (int i = 0;
-                                          i <
-                                              controller.playerCards['bottom']!
-                                                  .length;
-                                          i++)
-                                        Positioned(
-                                          // right: 1,
+                      child:
+                          // Obx(() =>
+                          controller.playerCards['bottom']?.isNotEmpty ?? false
+                              ? SizedBox(
+                                  height: 88,
+                                  width: controller
+                                              .playerCards['bottom']!.length *
+                                          (MediaQuery.of(context).size.width *
+                                              0.0526) +
+                                      30,
+                                  // width: MediaQuery.of(context).size.width * 0.7,
+                                  child: Stack(
+                                      // alignment: Alignment.center,
+                                      children: [
+                                        for (int i = 0;
+                                            i <
+                                                controller
+                                                    .playerCards['bottom']!
+                                                    .length;
+                                            i++)
+                                          Positioned(
+                                            // right: 1,
 
-                                          left: i *
-                                              (MediaQuery.of(context)
-                                                      .size
-                                                      .width *
-                                                  0.0526),
-                                          child: GestureDetector(
-                                            onTap: () {
-                                              final card = controller
-                                                  .playerCards['bottom']![i];
-                                              if (controller.isBottomPlayerTurn
-                                                      .value &&
-                                                  controller
-                                                      .isCardPlayable(card)) {
-                                                controller.playCard(card);
-                                              }
-                                            },
-                                            child: Builder(
-                                              builder: (context) {
+                                            left: i *
+                                                (MediaQuery.of(context)
+                                                        .size
+                                                        .width *
+                                                    0.0526),
+                                            child: GestureDetector(
+                                              onTap: () {
                                                 final card = controller
                                                     .playerCards['bottom']![i];
-                                                final canPlay = controller
-                                                    .isCardPlayable(card);
-                                                return CardWidget(
-                                                  card: card,
-                                                  isSelectable: controller
-                                                          .isBottomPlayerTurn
-                                                          .value &&
-                                                      canPlay,
-                                                  borderColor: controller
-                                                          .isBottomPlayerTurn
-                                                          .value
-                                                      ? (canPlay
-                                                          ? Colors.blue
-                                                          : Colors.red)
-                                                      : Colors.black26,
-                                                );
+                                                if (controller
+                                                        .isBottomPlayerTurn
+                                                        .value &&
+                                                    controller
+                                                        .isCardPlayable(card)) {
+                                                  // این کارت را انتخاب کرده‌ایم
+                                                  controller.playCard(card);
+                                                  print(
+                                                      'isBottomPlayerTurn: ${controller.isBottomPlayerTurn.value} and card: $card');
+                                                }
                                               },
+                                              child: Builder(
+                                                builder: (context) {
+                                                  final card =
+                                                      controller.playerCards[
+                                                          'bottom']![i];
+                                                  final canPlay = controller
+                                                      .isCardPlayable(card);
+                                                  return CardWidget(
+                                                    key: ValueKey(
+                                                        '${card.rankName}_${card.suit}'),
+                                                    card: card,
+                                                    isSelectable: controller
+                                                            .isBottomPlayerTurn
+                                                            .value &&
+                                                        canPlay,
+                                                    borderColor: controller
+                                                            .isBottomPlayerTurn
+                                                            .value
+                                                        ? (canPlay
+                                                            ? Colors.blue
+                                                            : Colors.red)
+                                                        : Colors.black26,
+                                                  );
+                                                },
+                                              ),
                                             ),
                                           ),
-                                        ),
-                                    ]))
-                            : SizedBox(),
-                      ),
+                                      ]))
+                              : SizedBox(),
+                      // ),
                     ),
                   ],
                 ),
@@ -344,15 +413,16 @@ class GameScreen extends StatelessWidget {
                         ? SizedBox(
                             height:
                                 (controller.playerCards['left']!.length * 20) +
-                                    65,
-                            width: 65,
+                                    65 +
+                                    40,
+                            width: 75,
                             child: Stack(
                               children: [
                                 for (int i = 0;
                                     i < controller.playerCards['left']!.length;
                                     i++)
                                   Positioned(
-                                    top: i * 20,
+                                    top: i * 26,
                                     child: CardWidget(
                                       card: controller.playerCards['left']![i],
                                     ),
@@ -382,8 +452,9 @@ class GameScreen extends StatelessWidget {
               Obx(
                 () => controller.playerCards['right']?.isNotEmpty ?? false
                     ? SizedBox(
-                        height:
-                            (controller.playerCards['right']!.length * 20) + 65,
+                        height: (controller.playerCards['right']!.length * 20) +
+                            65 +
+                            40,
                         width: 65,
                         child: Stack(
                           alignment: Alignment.center,
@@ -392,7 +463,7 @@ class GameScreen extends StatelessWidget {
                                 i < controller.playerCards['right']!.length;
                                 i++)
                               Positioned(
-                                top: i * 20,
+                                top: i * 26,
                                 child: CardWidget(
                                   card: controller.playerCards['right']![i],
                                 ),
@@ -434,16 +505,19 @@ class GameScreen extends StatelessWidget {
                       child: Obx(
                         () => controller.playerCards['top']?.isNotEmpty ?? false
                             ? SizedBox(
-                                height: 88,
+                                // height: 88,
+                                height: 98,
                                 width:
-                                    controller.playerCards['top']!.length * 15 +
-                                        45,
+                                    controller.playerCards['top']!.length * 16 +
+                                        //55
+                                        95,
                                 child: Stack(children: [
                                   for (int i = 0;
                                       i < controller.playerCards['top']!.length;
                                       i++)
                                     Positioned(
-                                      right: i * 15,
+                                      //15
+                                      right: i * 19,
                                       child: CardWidget(
                                         card: controller.playerCards['top']![i],
                                       ),
@@ -549,5 +623,56 @@ class GameScreen extends StatelessWidget {
       case Suit.spades:
         return 'spades.png';
     }
+  }
+
+  void _showPlayedCardsDialog(BuildContext context) {
+    final tableHistory = controller.game.tableHistory;
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text('کارت‌های بازی‌شده'),
+          content: SizedBox(
+            width: 350,
+            child: SingleChildScrollView(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  for (int i = 0; i < tableHistory.length; i++)
+                    Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 4.0),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                        children: [
+                          Text('دست ${i + 1}:',
+                              style: TextStyle(fontWeight: FontWeight.bold)),
+                          ...tableHistory[i]
+                              .asMap()
+                              .entries
+                              .map((entry) => Padding(
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 2.0),
+                                    child: CardWidget(
+                                        card: entry.value,
+                                        borderColor: Colors.red),
+                                  )),
+                        ],
+                      ),
+                    ),
+                  if (tableHistory.isEmpty)
+                    Center(child: Text('هنوز کارتی بازی نشده است.')),
+                ],
+              ),
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: Text('بستن'),
+            ),
+          ],
+        );
+      },
+    );
   }
 }
