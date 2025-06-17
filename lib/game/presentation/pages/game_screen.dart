@@ -1,0 +1,721 @@
+import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+
+import 'package:persian_hokm/game/models/card.dart';
+import 'package:persian_hokm/game/presentation/controllers/game_controller.dart';
+import 'package:persian_hokm/game/presentation/pages/settings_screen.dart';
+import 'package:persian_hokm/game/presentation/widgets/animated_card.dart';
+import 'package:persian_hokm/game/presentation/widgets/card_widget.dart';
+import 'package:persian_hokm/game/presentation/widgets/played_animated_card.dart';
+
+class GameScreen extends StatelessWidget {
+  /// کنترلر اصلی بازی که منطق و وضعیت بازی را مدیریت می‌کند.
+  final controller = Get.put(GameController());
+
+  /// کنترلر تنظیمات برای دسترسی به تنظیمات پس‌زمینه و غیره.
+  final settingsController = Get.put(SettingsController());
+
+  GameScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (bool didPop, PopupRoute? route) async {
+        if (!didPop) {
+          final shouldPop = await showDialog<bool>(
+            context: context,
+            builder: (context) => AlertDialog(
+              title: Text('خروج از بازی'),
+              content: Text('آیا می‌خواهید از بازی خارج شوید؟'),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(false),
+                  child: Text('خیر'),
+                ),
+                TextButton(
+                  onPressed: () {
+                    Navigator.of(context).pop(true);
+                  },
+                  child: Text('بله'),
+                ),
+              ],
+            ),
+          );
+
+          if (shouldPop == true) {
+            Get.back();
+          }
+        }
+      },
+      child: Obx(() {
+        final idx = settingsController.backgroundIndex.value;
+        final isColor = idx < settingsController.backgroundColors.length;
+        return Scaffold(
+          body: Stack(
+            alignment: Alignment.center,
+            fit: StackFit.expand,
+            children: [
+              isColor
+                  ? Container(color: settingsController.backgroundColors[idx])
+                  : Container(
+                      decoration: BoxDecoration(
+                        image: DecorationImage(
+                          image: AssetImage(settingsController.backgroundImages[
+                              idx -
+                                  settingsController.backgroundColors.length]),
+                          fit: BoxFit.fill,
+                        ),
+                      ),
+                    ),
+              textTop(context),
+              cardCenter(),
+              Obx(() => controller.showCards.value ? cardBotton() : SizedBox()),
+              Obx(() => controller.showCards.value ? cardLeft() : SizedBox()),
+              Obx(() => controller.showCards.value ? cardRight() : SizedBox()),
+              Obx(() => controller.showCards.value ? cardTop() : SizedBox()),
+              Positioned(
+                right: 4,
+                top: 4,
+                child: CircleAvatar(
+                  child: CloseButton(),
+                ),
+              ),
+              Obx(() => controller.showHokmDialog.value &&
+                      controller.hokmPlayer.value == 'bottom'
+                  ? _buildHokmSelectionDialog()
+                  : SizedBox()),
+              // نمایش کارت‌های متحرک بالای همه ویجت‌ها
+              Obx(() => Stack(
+                    children: [
+                      for (final animCard in controller.animatedCards)
+                        AnimatedCard(
+                          key: animCard.key,
+                          card: animCard.card,
+                          targetPosition: animCard.targetPosition,
+                          showBack: true,
+                        ),
+                    ],
+                  )),
+              // نمایش کارت‌های متحرک بازی (از دست بازیکن به مرکز)
+              Obx(() => Center(
+                    child: Stack(
+                      children: [
+                        for (final animCard in controller.animatedPlayedCards)
+                          PlayedAnimatedCard(
+                            key: animCard.key,
+                            card: animCard.card,
+                            fromPosition: animCard.fromPosition,
+                            isCut: animCard.isCut,
+                          ),
+                      ],
+                    ),
+                  )),
+            ],
+          ),
+        );
+      }),
+    );
+  }
+
+  /// نمایش اطلاعات بالای صفحه شامل امتیازات و خال حکم انتخاب شده.
+  Widget textTop(BuildContext context) {
+    final idx = settingsController.cardBackIndex.value;
+    final isColor = idx < settingsController.cardBackColors.length;
+    return Positioned(
+      top: 45,
+      left: 60,
+      right: 50,
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              bkgText(
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        Obx(() => Text('شمــا: ست: '
+                            '${controller.teamSets['team1']?.value}  |  دست: ${controller.teamScores['team1']?.value}')),
+                      ],
+                    ),
+                    SizedBox(width: 4),
+                    Obx(() => Row(
+                          children: [
+                            for (int i = 0;
+                                i < controller.team1WonHands.length;
+                                i++)
+                              Padding(
+                                padding:
+                                    const EdgeInsets.symmetric(horizontal: 1.5),
+                                child: isColor
+                                    ? Container(
+                                        width: 14,
+                                        height: 21,
+                                        decoration: BoxDecoration(
+                                          color: settingsController
+                                              .cardBackColors[idx],
+                                          borderRadius:
+                                              BorderRadius.circular(3),
+                                          border: Border.all(
+                                            color: Colors.black,
+                                            width: 1,
+                                          ),
+                                        ),
+                                      )
+                                    : Image.asset(
+                                        settingsController.cardBackImages[idx -
+                                            settingsController
+                                                .cardBackColors.length],
+                                        // fit: BoxFit.cover,
+                                        width: 18,
+                                        height: 21,
+                                      ),
+                              ),
+                          ],
+                        )),
+                  ],
+                ),
+              ),
+              SizedBox(height: 10),
+              bkgText(
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        Obx(() => Text('حریف: ست: '
+                            '${controller.teamSets['team2']?.value}  |  دست: ${controller.teamScores['team2']?.value}')),
+                      ],
+                    ),
+                    SizedBox(width: 4),
+                    Obx(() => Row(
+                          children: [
+                            for (int i = 0;
+                                i < controller.team2WonHands.length;
+                                i++)
+                              Padding(
+                                padding:
+                                    const EdgeInsets.symmetric(horizontal: 1.5),
+                                child: isColor
+                                    ? Container(
+                                        width: 14,
+                                        height: 21,
+                                        decoration: BoxDecoration(
+                                          color: settingsController
+                                              .cardBackColors[idx],
+                                          borderRadius:
+                                              BorderRadius.circular(3),
+                                          border: Border.all(
+                                            color: Colors.black,
+                                            width: 1,
+                                          ),
+                                        ),
+                                      )
+                                    : Image.asset(
+                                        settingsController.cardBackImages[idx -
+                                            settingsController
+                                                .cardBackColors.length],
+                                        // fit: BoxFit.cover,
+                                        width: 18,
+                                        height: 21,
+                                      ),
+                              ),
+                          ],
+                        )),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          Obx(() => controller.selectedHokm.value != null
+              ? bkgText(
+                  child: Column(
+                    children: [
+                      Text(
+                        'حکم ',
+                        style: TextStyle(
+                            fontWeight: FontWeight.bold, fontSize: 14),
+                      ),
+                      InkWell(
+                        onTap: () => _showPlayedCardsDialog(context),
+                        child: Image.asset(
+                          'assets/drawables/${_getSuitImageName(controller.selectedHokm.value!)}',
+                          width: 28,
+                        ),
+                      ),
+                    ],
+                  ),
+                )
+              : SizedBox()),
+        ],
+      ),
+    );
+  }
+
+  /// ساختار پس‌زمینه متنی برای نمایش امتیازات و حکم.
+  Container bkgText({required Widget child}) {
+    return Container(
+        padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        decoration: BoxDecoration(
+          color: Colors.grey.shade700.withOpacity(0.5),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: child);
+  }
+
+  /// کارت های مرکزی
+  Widget cardCenter() {
+    return Positioned(
+      bottom: 0,
+      top: 0,
+      left: 0,
+      right: 0,
+      child: Center(
+        child: Obx(
+          () => controller.showStartButton.value
+              ? ElevatedButton(
+                  onPressed: controller.startGame,
+                  child: Text('انتخاب حاکم'),
+                )
+              : SizedBox(
+                  height: 150,
+                  width: 250,
+                  child: Stack(
+                    alignment: Alignment.center,
+                    children: [
+                      // نمایش کارت‌های روی میز در حالت بازی
+                      Obx(() {
+                        return controller.isGameStarted.value &&
+                                controller.tableCards.isNotEmpty
+                            ? Positioned(
+                                child: Stack(
+                                  children: [
+                                    for (var entry
+                                        in controller.tableCards.entries)
+                                      Align(
+                                        alignment: entry.key == 'left'
+                                            ? Alignment.centerLeft
+                                            : entry.key == 'right'
+                                                ? Alignment.centerRight
+                                                : entry.key == 'top'
+                                                    ? Alignment.topCenter
+                                                    : Alignment.bottomCenter,
+                                        child: CardWidget(
+                                          card: entry.value,
+                                        ),
+                                      ),
+                                  ],
+                                ),
+                              )
+                            : SizedBox();
+                      }),
+                      // نمایش کارت‌های پشته فقط زمانی که بازی شروع نشده یا در مرحله تعیین حاکم هستیم
+                      if (controller.showCards.value &&
+                          controller.cards.isNotEmpty)
+                        for (int i = controller.cards.length - 1; i >= 0; i--)
+                          Positioned(
+                            child: CardWidget(
+                              card: controller.cards[i],
+                              showBack: true,
+                            ),
+                          ),
+                    ],
+                  ),
+                ),
+        ),
+      ),
+    );
+  }
+
+  /// نمایش کارت‌های بازیکن پایین (بازیکن انسانی).
+  Widget cardBotton() {
+    return Builder(
+        builder: (context) => Obx(
+              () => Positioned(
+                bottom: controller.cardPositions['bottom']?.value ?? 0,
+                left: 0,
+                right: 0,
+                child: Column(
+                  children: [
+                    if (controller.hokmPlayer.value == 'bottom') ...tajAnCir(),
+                    SizedBox(height: 6),
+                    Center(
+                      child:
+                          // Obx(() =>
+                          controller.playerCards['bottom']?.isNotEmpty ?? false
+                              ? SizedBox(
+                                  height: 88,
+                                  width: controller
+                                              .playerCards['bottom']!.length *
+                                          (MediaQuery.of(context).size.width *
+                                              0.0526) +
+                                      30,
+                                  // width: MediaQuery.of(context).size.width * 0.7,
+                                  child: Stack(
+                                      // alignment: Alignment.center,
+                                      children: [
+                                        for (int i = 0;
+                                            i <
+                                                controller
+                                                    .playerCards['bottom']!
+                                                    .length;
+                                            i++)
+                                          Positioned(
+                                            // right: 1,
+
+                                            left: i *
+                                                (MediaQuery.of(context)
+                                                        .size
+                                                        .width *
+                                                    0.0526),
+                                            child: GestureDetector(
+                                              onTap: () {
+                                                final card = controller
+                                                    .playerCards['bottom']![i];
+                                                if (controller
+                                                        .isBottomPlayerTurn
+                                                        .value &&
+                                                    controller
+                                                        .isCardPlayable(card)) {
+                                                  // این کارت را انتخاب کرده‌ایم
+                                                  controller.playCard(card);
+                                                  print(
+                                                      'isBottomPlayerTurn: ${controller.isBottomPlayerTurn.value} and card: $card');
+                                                }
+                                              },
+                                              child: Builder(
+                                                builder: (context) {
+                                                  final card =
+                                                      controller.playerCards[
+                                                          'bottom']![i];
+                                                  final canPlay = controller
+                                                      .isCardPlayable(card);
+                                                  return CardWidget(
+                                                    key: ValueKey(
+                                                        '${card.rankName}_${card.suit}'),
+                                                    card: card,
+                                                    isSelectable: controller
+                                                            .isBottomPlayerTurn
+                                                            .value &&
+                                                        canPlay,
+                                                    borderColor: controller
+                                                            .isBottomPlayerTurn
+                                                            .value
+                                                        ? (canPlay
+                                                            ? Colors.blue
+                                                            : Colors.red)
+                                                        : Colors.black26,
+                                                  );
+                                                },
+                                              ),
+                                            ),
+                                          ),
+                                      ]))
+                              : SizedBox(),
+                      // ),
+                    ),
+                  ],
+                ),
+              ),
+            ));
+  }
+
+  /// نمایش کارت‌های بازیکن چپ (هوش مصنوعی حریف).
+  Widget cardLeft() {
+    return Builder(
+        builder: (context) => Obx(() => Positioned(
+            left: (controller.cardPositions['left']?.value ?? 50) + 46,
+            bottom: 0,
+            top: 0,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                bkgText(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(controller.getPlayerName('left')),
+                      if (controller.hokmPlayer.value == 'left') ...tajAnCir(),
+                    ],
+                  ),
+                ),
+                SizedBox(width: 6),
+                Center(
+                  child: Obx(
+                    () => controller.playerCards['left']?.isNotEmpty ?? false
+                        ? SizedBox(
+                            height:
+                                (controller.playerCards['left']!.length * 20) +
+                                    65 +
+                                    40,
+                            width: 75,
+                            child: Stack(
+                              children: [
+                                for (int i = 0;
+                                    i < controller.playerCards['left']!.length;
+                                    i++)
+                                  Positioned(
+                                    top: i * 26,
+                                    child: CardWidget(
+                                      card: controller.playerCards['left']![i],
+                                    ),
+                                  ),
+                              ],
+                            ),
+                          )
+                        : SizedBox(),
+                  ),
+                ),
+              ],
+            ))));
+  }
+
+  /// نمایش کارت‌های بازیکن راست (هوش مصنوعی حریف).
+  Widget cardRight() {
+    return Builder(
+      builder: (context) => Obx(
+        () => Positioned(
+          right: (controller.cardPositions['right']?.value ?? 50) + 50,
+          bottom: 0,
+          top: 0,
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Obx(
+                () => controller.playerCards['right']?.isNotEmpty ?? false
+                    ? SizedBox(
+                        height: (controller.playerCards['right']!.length * 20) +
+                            65 +
+                            40,
+                        width: 65,
+                        child: Stack(
+                          alignment: Alignment.center,
+                          children: [
+                            for (int i = 0;
+                                i < controller.playerCards['right']!.length;
+                                i++)
+                              Positioned(
+                                top: i * 26,
+                                child: CardWidget(
+                                  card: controller.playerCards['right']![i],
+                                ),
+                              ),
+                          ],
+                        ),
+                      )
+                    : SizedBox(),
+              ),
+              SizedBox(width: 6),
+              bkgText(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(controller.getPlayerName('right')),
+                    if (controller.hokmPlayer.value == 'right') ...tajAnCir()
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// کارت های بازیکن بالا (هوش مصنوعی یار)
+  Widget cardTop() {
+    return Builder(
+        builder: (context) => Obx(
+              () => Positioned(
+                top: (controller.cardPositions['top']?.value ?? 1),
+                left: 0,
+                right: 0,
+                child: Column(
+                  children: [
+                    Center(
+                      child: Obx(
+                        () => controller.playerCards['top']?.isNotEmpty ?? false
+                            ? SizedBox(
+                                // height: 88,
+                                height: 98,
+                                width:
+                                    controller.playerCards['top']!.length * 16 +
+                                        //55
+                                        95,
+                                child: Stack(children: [
+                                  for (int i = 0;
+                                      i < controller.playerCards['top']!.length;
+                                      i++)
+                                    Positioned(
+                                      //15
+                                      right: i * 19,
+                                      child: CardWidget(
+                                        card: controller.playerCards['top']![i],
+                                      ),
+                                    ),
+                                ]))
+                            : SizedBox(),
+                      ),
+                    ),
+                    SizedBox(height: 6),
+                    bkgText(
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(controller.getPlayerName('top')),
+                          if (controller.hokmPlayer.value == 'top')
+                            ...tajAnCir()
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ));
+  }
+
+  List<Widget> tajAnCir() {
+    return [
+      Image.asset(
+        'assets/drawables/taj.png',
+        height: 20,
+      ),
+    ];
+  }
+
+  /// ساخت دیالوگ انتخاب خال حکم برای بازیکن انسانی.
+  Widget _buildHokmSelectionDialog() {
+    return Container(
+      color: Colors.black54,
+      child: Center(
+        child: Container(
+          width: 400,
+          margin: EdgeInsets.symmetric(horizontal: 32),
+          padding: EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                'انتخاب خال حکم',
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black,
+                ),
+              ),
+              SizedBox(height: 16),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                textDirection: TextDirection.ltr,
+                children: [
+                  _buildSuitButton(Suit.hearts, 'hearts.png'),
+                  _buildSuitButton(Suit.clubs, 'clubs.png'),
+                  _buildSuitButton(Suit.diamonds, 'diamonds.png'),
+                  _buildSuitButton(Suit.spades, 'spades.png'),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// ساخت دکمه انتخاب یک خال خاص در دیالوگ انتخاب حکم.
+  Widget _buildSuitButton(Suit suit, String imageName) {
+    return InkWell(
+      onTap: () => controller.selectHokm(suit),
+      child: Container(
+        padding: EdgeInsets.all(8),
+        decoration: BoxDecoration(
+          border: Border.all(color: Colors.grey),
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Image.asset(
+          'assets/drawables/$imageName',
+          width: 40,
+          height: 40,
+        ),
+      ),
+    );
+  }
+
+  /// گرفتن نام فایل عکس مربوط به یک خال.
+  String _getSuitImageName(Suit suit) {
+    switch (suit) {
+      case Suit.hearts:
+        return 'hearts.png';
+      case Suit.clubs:
+        return 'clubs.png';
+      case Suit.diamonds:
+        return 'diamonds.png';
+      case Suit.spades:
+        return 'spades.png';
+    }
+  }
+
+  void _showPlayedCardsDialog(BuildContext context) {
+    final tableHistory = controller.game.tableHistory;
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text('کارت‌های بازی‌شده'),
+          content: SizedBox(
+            width: 350,
+            child: SingleChildScrollView(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  for (int i = 0; i < tableHistory.length; i++)
+                    Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 4.0),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                        children: [
+                          Text('دست ${i + 1}:',
+                              style: TextStyle(fontWeight: FontWeight.bold)),
+                          ...tableHistory[i]
+                              .asMap()
+                              .entries
+                              .map((entry) => Padding(
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 2.0),
+                                    child: CardWidget(
+                                        card: entry.value,
+                                        borderColor: Colors.red),
+                                  )),
+                        ],
+                      ),
+                    ),
+                  if (tableHistory.isEmpty)
+                    Center(child: Text('هنوز کارتی بازی نشده است.')),
+                ],
+              ),
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: Text('بستن'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+}
