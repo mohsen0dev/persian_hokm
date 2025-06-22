@@ -73042,7 +73042,7 @@ A.Gp.prototype={
 M(a){var s,r=this,q=null,p={}
 p.a=null
 s=t.w
-return A.asc(!1,A.a8C(q,A.dt(A.dt(A.arD(A.b([A.dt(A.bz("\u0628\u0627\u0632\u06cc \u062d\u06a9\u0645 \u0627\u06cc\u0631\u0627\u0646\u06cc \u062f\u0645\u0648",A.fY(q,q,B.dH,q,q,q,q,q,"Vazirmatn",q,q,A.bR(a,q,s).w.a.a*0.04,q,q,B.b_,q,q,!0,q,q,q,q,q,q,q,q),q),q,q),A.bP(q,A.bR(a,q,s).w.a.b*0.03,q),A.dt(r.uY(a,"\u0634\u0631\u0648\u0639 \u0628\u0627\u0632\u06cc",new A.a_X()),q,q),r.uY(a,"\u062a\u0646\u0638\u06cc\u0645\u0627\u062a \u0628\u0627\u0632\u06cc",new A.a_Y()),r.uY(a,"\u062f\u0631\u0628\u0627\u0631\u0647 \u0645\u0627",new A.a_Z()),r.uY(a,"\u0627\u0631\u0633\u0627\u0644 \u0644\u06cc\u0646\u06a9 \u0628\u0627\u0632\u06cc",new A.a0_())],t.p),q,!0),q,q),q,q)),new A.a00(p,a),t.vv)},
+return A.asc(!1,A.a8C(q,A.dt(A.dt(A.arD(A.b([A.dt(A.bz("2\u0628\u0627\u0632\u06cc \u062d\u06a9\u0645 \u0627\u06cc\u0631\u0627\u0646\u06cc \u062f\u0645\u0648",A.fY(q,q,B.dH,q,q,q,q,q,"Vazirmatn",q,q,A.bR(a,q,s).w.a.a*0.04,q,q,B.b_,q,q,!0,q,q,q,q,q,q,q,q),q),q,q),A.bP(q,A.bR(a,q,s).w.a.b*0.03,q),A.dt(r.uY(a,"\u0634\u0631\u0648\u0639 \u0628\u0627\u0632\u06cc",new A.a_X()),q,q),r.uY(a,"\u062a\u0646\u0638\u06cc\u0645\u0627\u062a \u0628\u0627\u0632\u06cc",new A.a_Y()),r.uY(a,"\u062f\u0631\u0628\u0627\u0631\u0647 \u0645\u0627",new A.a_Z()),r.uY(a,"\u0627\u0631\u0633\u0627\u0644 \u0644\u06cc\u0646\u06a9 \u0628\u0627\u0632\u06cc",new A.a0_())],t.p),q,!0),q,q),q,q)),new A.a00(p,a),t.vv)},
 uY(a,b,c){var s=null,r=A.eH(15),q=A.Ut(B.dH,0.5)
 return A.dt(A.cD(s,A.GE(!1,A.eH(15),!0,A.dt(A.bz(b,A.fY(s,s,s,s,s,s,s,s,s,s,s,16,s,s,s,s,s,!0,s,s,s,s,s,s,s,s),s),s,s),s,!0,s,s,s,s,s,s,s,s,s,new A.a01(c),s,s,s,s,s,s,s),B.q,s,s,new A.c4(s,s,q,r,s,s,B.Z),s,45,s,new A.az(0,8,0,8),s,s,s,180),s,s)}}
 A.a00.prototype={
