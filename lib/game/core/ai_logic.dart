@@ -19,7 +19,7 @@ GameCard weakestCard(List<GameCard> cards) {
 }
 
 /// پیدا کردن قوی‌ترین کارت یا برنده از یک لیست کارت
-GameCard strongestCard(List<GameCard> cards, {Suit? hokm, Suit? leadSuit}) {
+GameCard strongestCard(List<GameCard> cards, {Suit? hokm}) {
   // اگر حکم مشخص شده و کارت حکم وجود دارد
   if (hokm != null) {
     final hokmCards = cards.where((c) => c.suit == hokm).toList();
@@ -28,14 +28,7 @@ GameCard strongestCard(List<GameCard> cards, {Suit? hokm, Suit? leadSuit}) {
       return hokmCards.reduce((a, b) => a.rank.index < b.rank.index ? a : b);
     }
   }
-  // اگر خال اصلی مشخص شده و کارت همان خال وجود دارد
-  if (leadSuit != null) {
-    final leadSuitCards = cards.where((c) => c.suit == leadSuit).toList();
-    if (leadSuitCards.isNotEmpty) {
-      return leadSuitCards
-          .reduce((a, b) => a.rank.index < b.rank.index ? a : b);
-    }
-  }
+
   // در غیر این صورت، قوی‌ترین کارت بر اساس rank
   return cards.reduce((a, b) => a.rank.index < b.rank.index ? a : b);
 }

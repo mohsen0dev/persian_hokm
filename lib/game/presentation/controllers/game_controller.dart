@@ -451,6 +451,7 @@ class GameController extends GetxController {
       tableHistory: List.from(game.tableHistory),
       teams: List.from(game.teams),
       hokm: game.hokm,
+      starterDirection: game.starterDirection,
     );
     playCard(card);
   }

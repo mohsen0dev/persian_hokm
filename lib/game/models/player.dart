@@ -32,6 +32,8 @@ abstract class Player {
     required List<Team> teams,
     //! خال حکم
     required Suit hokm,
+    //! جهت شروع‌کننده دست
+    required Direction starterDirection,
   });
 
   /// انتخاب خال حکم توسط هوش مصنوعی
@@ -110,6 +112,7 @@ class PlayerAI extends Player {
     required List<List<GameCard>> tableHistory,
     required List<Team> teams,
     required Suit hokm,
+    required Direction starterDirection,
   }) {
     //! سطح هوش مصنوعی موثر
     final effectiveLevel = isPartner ? 2 : aiLevel;
@@ -119,9 +122,11 @@ class PlayerAI extends Player {
       case 1:
         return _intermediatePlay(table, hokm);
       case 2:
-        return _advancedPlay(table, hokm, tableHistory, teams);
+        return _advancedPlay(table, hokm, tableHistory, teams,
+            starterDirection: starterDirection);
       default:
-        return _advancedPlay(table, hokm, tableHistory, teams);
+        return _advancedPlay(table, hokm, tableHistory, teams,
+            starterDirection: starterDirection);
     }
   }
 
@@ -164,16 +169,13 @@ class PlayerAI extends Player {
     return hokms.isNotEmpty ? strongestCard(hokms) : weakestCard(hand);
   }
 
-  GameCard _advancedPlay(
-    List<GameCard> table,
-    Suit hokm,
-    List<List<GameCard>> tableHistory,
-    List<Team> teams,
-  ) {
+  GameCard _advancedPlay(List<GameCard> table, Suit hokm,
+      List<List<GameCard>> tableHistory, List<Team> teams,
+      {required Direction starterDirection}) {
     // اگر نفر اول هستیم (table خالی است)
     if (table.isEmpty) {
       // دست اول (۱۳ کارت)
-      return firstCard(hokm, tableHistory, table, teams);
+      return firstCard(hokm, tableHistory, table, teams, starterDirection);
     } // --- منطق نفر دوم (table.length == 1) ---
     else if (table.length == 1) {
       return secondCard(hokm, tableHistory, table, teams);
@@ -195,7 +197,7 @@ class PlayerAI extends Player {
 
 //! هوش مصنوعی نفر اول
   GameCard firstCard(Suit hokm, List<List<GameCard>> tableHistory,
-      List<GameCard> table, List<Team> teams) {
+      List<GameCard> table, List<Team> teams, Direction starterDirection) {
     // دست اول (۱۳ کارت)
     if (hand.length == 13) {
       // اولویت ۱: آس غیر حکم
@@ -294,7 +296,8 @@ class PlayerAI extends Player {
                 : direction == Direction.left
                     ? Direction.right
                     : Direction.left;
-        final partnerCard = lastHand[partnerDir.index];
+        int partnerOffset = (partnerDir.index - starterDirection.index + 4) % 4;
+        final partnerCard = lastHand[partnerOffset];
         // اگر یار خال leadSuit را نداشته و حکم نزده
         if (partnerCard.suit != leadSuit && partnerCard.suit != hokm) {
           final mySuitCards = hand.where((c) => c.suit == leadSuit).toList();
@@ -316,7 +319,8 @@ class PlayerAI extends Player {
                 : direction == Direction.left
                     ? Direction.right
                     : Direction.left;
-        final partnerCard = lastHand[partnerDir.index];
+        int partnerOffset = (partnerDir.index - starterDirection.index + 4) % 4;
+        final partnerCard = lastHand[partnerOffset];
         // اگر یار خال leadSuit را نداشته و حکم نزده و کارت برنده بوده
         if (partnerCard.suit != leadSuit && partnerCard.suit != hokm) {
           // آیا کارت یار قوی‌ترین کارت باقی‌مانده آن خال بوده؟
@@ -483,7 +487,8 @@ class PlayerAI extends Player {
     // اگر کارت همان خال را داری
     if (sameSuitCards.isNotEmpty) {
       // اگر یار واقعاً برنده است یا فعلاً برنده است (حتی اگر strongest نیست)
-      final maxOnTable = strongestCard([firstCard, secondCard]);
+      final maxOnTable = strongestCard([firstCard, secondCard],
+          hokm: hokm == leadSuit ? null : hokm);
       final partnerIsCurrentlyWinning = maxOnTable == firstCard;
       print('[DEBUG][thirdCard] partnerIsCurrentlyWinning: '
           '\u001b[36m$partnerIsCurrentlyWinning\u001b[0m, maxOnTable: $maxOnTable');
@@ -669,6 +674,7 @@ class PlayerHuman extends Player {
     required List<List<GameCard>> tableHistory,
     required List<Team> teams,
     required Suit hokm,
+    required Direction starterDirection,
   }) {
     // منطق بازی بازیکن انسانی توسط UI کنترل می‌شود
     throw UnimplementedError('بازی بازیکن انسانی توسط UI انجام می‌شود');

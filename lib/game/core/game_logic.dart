@@ -18,6 +18,7 @@ class GameLogic {
   List<GameCard> table = [];
   List<List<GameCard>> tableHistory = [];
   int lastIndex = 52;
+  late Direction starterDirection; // جهت شروع‌کننده هر دست
 
   GameLogic() {
     newGame();
@@ -34,6 +35,8 @@ class GameLogic {
     tableHistory.clear();
     deck = _getNewDeck();
     lastIndex = deck.length;
+    // مقداردهی اولیه starterDirection (در صورت نیاز)
+    starterDirection = Direction.bottom;
   }
 
   //! ساخت یک deck جدید
@@ -64,6 +67,7 @@ class GameLogic {
     }
     hakem = directionHakemDetermination;
     tableDir = directionHakemDetermination;
+    starterDirection = directionHakemDetermination; // مقداردهی اولیه
     deck = _getNewDeck();
     lastIndex = deck.length;
   }
@@ -157,6 +161,7 @@ class GameLogic {
       final winner = getTableWinner(table, hokm, teams);
       winner.team.score++;
       tableDir = winner.direction;
+      starterDirection = winner.direction; // مقداردهی جهت شروع‌کننده دست بعدی
       tableHistory.add(List.from(table));
       table.clear();
     }
