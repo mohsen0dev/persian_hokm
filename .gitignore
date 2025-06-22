@@ -43,3 +43,20 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+
+# Windows related
+/windows/
+
+# Linux related
+/linux/
+
+# MacOS related
+/macos/
+
+# Web related
+/web/
+
+# iOS related
+/ios/
+
+
