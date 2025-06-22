@@ -33,7 +33,30 @@
   <link rel="manifest" href="manifest.json">
 </head>
 <body>
-  <p>tessssssst</p>
   <script src="flutter_bootstrap.js" async></script>
 </body>
+<script>
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.getRegistrations().then(function(registrations) {
+      for(let registration of registrations) {
+        registration.update();
+      }
+    });
+    navigator.serviceWorker.addEventListener('controllerchange', function() {
+      window.location.reload();
+    });
+  }
+</script>
 </html>
+<script>
+if ("serviceWorker" in navigator) {
+  navigator.serviceWorker.getRegistrations().then(function(registrations) {
+    for(let registration of registrations) {
+      registration.update();
+    }
+  });
+  navigator.serviceWorker.addEventListener("controllerchange", function() {
+    window.location.reload();
+  });
+}
+</script>
