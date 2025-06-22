@@ -35,4 +35,16 @@
 <body>
   <script src="flutter_bootstrap.js" async></script>
 </body>
+<script>
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.getRegistrations().then(function(registrations) {
+      for(let registration of registrations) {
+        registration.update();
+      }
+    });
+    navigator.serviceWorker.addEventListener('controllerchange', function() {
+      window.location.reload();
+    });
+  }
+</script>
 </html>

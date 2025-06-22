@@ -24,6 +24,22 @@ jobs:
       - name: Build web
         run: flutter build web --release
 
+      - name: Patch index.html (base href and auto-refresh)
+        run: |
+          sed -i 's|<base href="/">|<base href="./">|g' build/web/index.html
+          echo '<script>
+          if ("serviceWorker" in navigator) {
+            navigator.serviceWorker.getRegistrations().then(function(registrations) {
+              for(let registration of registrations) {
+                registration.update();
+              }
+            });
+            navigator.serviceWorker.addEventListener("controllerchange", function() {
+              window.location.reload();
+            });
+          }
+          </script>' >> build/web/index.html
+
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v4
         with:

@@ -53,7 +53,7 @@ class HomeScreen extends StatelessWidget {
               children: [
                 Center(
                   child: Text(
-                    'بازی حکم ایرانی',
+                    'بازی حکم ایرانی دمو',
                     style: TextStyle(
                       fontSize: MediaQuery.of(context).size.width * 0.04,
                       fontWeight: FontWeight.bold,
