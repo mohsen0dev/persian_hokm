@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
@@ -104,7 +103,7 @@ class SettingsScreen extends StatelessWidget {
           ],
         ),
         centerTitle: true,
-        backgroundColor: Colors.deepPurple.shade700,
+        backgroundColor: Colors.deepPurple.shade400,
         elevation: 2,
       ),
       body: Container(
