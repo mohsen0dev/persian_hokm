@@ -12,6 +12,9 @@ abstract class Player {
   late Team team;
   late Direction direction;
 
+  /// آخرین خالی که یار بازی کرده (برای استراتژی هوشمند)
+  Suit? lastPartnerSuit;
+
   Player(this.name, List<GameCard> cards, this.direction) {
     addHand(cards);
   }
@@ -35,6 +38,11 @@ abstract class Player {
     //! جهت شروع‌کننده دست
     required Direction starterDirection,
   });
+
+  /// به‌روزرسانی آخرین خال بازی‌شده توسط یار
+  void updateLastPartnerSuit(Suit suit) {
+    lastPartnerSuit = suit;
+  }
 
   /// انتخاب خال حکم توسط هوش مصنوعی
   Suit determineHokm() {
@@ -161,7 +169,7 @@ class PlayerAI extends Player {
       final maxOnTable = strongestCard(
           table.where((c) => c.suit == table.first.suit).toList());
       final winning =
-          sameSuit.where((c) => c.rank.index > maxOnTable.rank.index).toList();
+          sameSuit.where((c) => c.rank.index < maxOnTable.rank.index).toList();
       return winning.isNotEmpty ? weakestCard(winning) : weakestCard(sameSuit);
     }
 
@@ -198,6 +206,15 @@ class PlayerAI extends Player {
 //! هوش مصنوعی نفر اول
   GameCard firstCard(Suit hokm, List<List<GameCard>> tableHistory,
       List<GameCard> table, List<Team> teams, Direction starterDirection) {
+    // اگر یار در دست قبلی یک خال خاص بازی کرده و کارت از آن خال داری، ضعیف‌ترین کارت همان خال را بازی کن
+    if (lastPartnerSuit != null) {
+      final mySuitCards = hand.where((c) => c.suit == lastPartnerSuit).toList();
+      if (mySuitCards.isNotEmpty) {
+        print(
+            '[$name][$direction] (اولویت ویژه): چون یار آخرین بار این خال را بازی کرده، ضعیف‌ترین کارت همان خال بازی می‌شود');
+        return weakestCard(mySuitCards);
+      }
+    }
     // دست اول (۱۳ کارت)
     if (hand.length == 13) {
       // اولویت ۱: آس غیر حکم
@@ -246,7 +263,7 @@ class PlayerAI extends Player {
           hand.where((c) => c.suit != hokm && c.rank == Rank.ace).toList();
       if (nonHokmAces.isNotEmpty) {
         print(
-            '[$name][$direction] (اولین نفر/دست‌های بعدی): بازی طبق اولویت ۱: آس غیر حکم');
+            '[$name][$direction] ( نفر اول /دست‌های بعدی): اولویت ۱: آس غیر حکم');
         return nonHokmAces.first;
       }
       // اولویت ۲: قوی‌ترین کارت‌های حکم که قطعا برنده‌اند
@@ -267,7 +284,7 @@ class PlayerAI extends Player {
                 .every((r) => playedSuitRanks.contains(r));
             if (isStrongest) {
               print(
-                  '[$name][$direction] (اولین نفر/دست‌های بعدی): بازی طبق اولویت ۳: قوی‌ترین کارت غیر حکم که قطعا برنده است');
+                  '[$name][$direction] ( نفر اول /دست‌های بعدی): اولویت ۳: قوی‌ترین کارت غیر حکم که قطعا برنده است');
               return card;
             }
           }
@@ -282,7 +299,7 @@ class PlayerAI extends Player {
       );
       if (partnerCard != null) {
         print(
-            '[$name][$direction] (اولین نفر/دست‌های بعدی): بازی طبق اولویت ۴: یار خالی را برید و تو هم آن خال را داری');
+            '[$name][$direction] ( نفر اول /دست‌های بعدی): اولویت ۴: یار خالی را برید و تو هم آن خال را داری');
         return partnerCard;
       }
       // اولویت ۴.۵: اگر نفر اول هستی و یار در دست قبلی یک خال غیر حکم را رد کرده، آن خال را بازی کن
@@ -299,11 +316,13 @@ class PlayerAI extends Player {
         int partnerOffset = (partnerDir.index - starterDirection.index + 4) % 4;
         final partnerCard = lastHand[partnerOffset];
         // اگر یار خال leadSuit را نداشته و حکم نزده
-        if (partnerCard.suit != leadSuit && partnerCard.suit != hokm) {
+        if (partnerCard.suit != leadSuit &&
+            partnerCard.suit != hokm &&
+            leadSuit != hokm) {
           final mySuitCards = hand.where((c) => c.suit == leadSuit).toList();
           if (mySuitCards.isNotEmpty) {
             print(
-                '[$name][$direction] (اولین نفر/دست‌های بعدی): بازی طبق اولویت ۴.۵: یار خال را رد کرده، آن خال را بازی کن');
+                '[$name][$direction] ( نفر اول /دست‌های بعدی): اولویت ۴.۵: یار خال را رد کرده، آن خال را بازی کن');
             return weakestCard(mySuitCards);
           }
         }
@@ -332,7 +351,7 @@ class PlayerAI extends Player {
             final mySuitCards = hand.where((c) => c.suit == leadSuit).toList();
             if (mySuitCards.isNotEmpty) {
               print(
-                  '[$name][$direction] (اولین نفر/دست‌های بعدی): بازی طبق اولویت ۴.۷: یار کارت برنده خال غیر حکم را رد کرده، آن خال را بازی کن تا یار برش بزند');
+                  '[$name][$direction] ( نفر اول /دست‌های بعدی): اولویت ۴.۷: یار کارت برنده خال غیر حکم را رد کرده، آن خال را بازی کن تا یار برش بزند');
               return weakestCard(mySuitCards);
             }
           }
@@ -371,7 +390,7 @@ class PlayerAI extends Player {
             .every((r) => playedHokmRanks.contains(r));
         if (isStrongest) {
           print(
-              '[$name][$direction] (اولین نفر/دست‌های بعدی): بازی طبق اولویت ۲: قوی‌ترین کارت حکم که قطعا برنده است');
+              '[$name][$direction] ( نفر اول /دست‌های بعدی): اولویت ۲: قوی‌ترین کارت حکم که قطعا برنده است');
           return card;
         }
       }
@@ -379,12 +398,12 @@ class PlayerAI extends Player {
       final nonHokmCards = hand.where((c) => c.suit != hokm).toList();
       if (nonHokmCards.isNotEmpty) {
         print(
-            '[$name][$direction] (اولین نفر/دست‌های بعدی): بازی طبق اولویت ۶: ضعیف‌ترین کارت غیر حکم');
+            '[$name][$direction] ( نفر اول /دست‌های بعدی): اولویت ۶: ضعیف‌ترین کارت غیر حکم');
         return weakestCard(nonHokmCards);
       }
       // اگر فقط حکم داری، ضعیف‌ترین حکم را بازی کن
       print(
-          '[$name][$direction] (اولین نفر/دست‌های بعدی): بازی طبق اولویت ۷: فقط حکم داری، ضعیف‌ترین حکم بازی می‌شود');
+          '[$name][$direction] ( نفر اول /دست‌های بعدی): اولویت ۷: فقط حکم داری، ضعیف‌ترین حکم بازی می‌شود');
       return weakestCard(hand);
     }
   }
@@ -464,8 +483,8 @@ class PlayerAI extends Player {
     // --- منطق جدید: آیا کارت یار واقعاً قوی‌ترین کارت باقی‌مانده است؟ ---
     bool partnerIsTrulyWinning = false;
     {
-      // همه کارت‌های بازی‌شده تا الان
-      final playedCards = tableHistory.expand((l) => l).toList();
+      // همه کارت‌های بازی‌شده تا الان + کارت‌های روی میز فعلی
+      final playedCards = tableHistory.expand((l) => l).toList() + table;
       // همه کارت‌های ممکن از آن خال
       final allSuitCards = Rank.values
           .map((rank) => GameCard(suit: leadSuit, rank: rank))
@@ -479,30 +498,44 @@ class PlayerAI extends Player {
           .toList();
       // اگر هیچ کارت قوی‌تری نسبت به کارت یار در کارت‌های باقی‌مانده نبود، پس یار واقعاً برنده است
       partnerIsTrulyWinning =
-          remainingSuitCards.every((c) => c.rank.index > firstCard.rank.index);
+          remainingSuitCards.every((c) => c.rank.index < firstCard.rank.index);
       print('[DEBUG][thirdCard] partnerIsTrulyWinning: '
           '\u001b[33m$partnerIsTrulyWinning\u001b[0m, '
           'firstCard: $firstCard, remainingSuitCards: $remainingSuitCards, hand: $hand');
     }
     // اگر کارت همان خال را داری
     if (sameSuitCards.isNotEmpty) {
-      // اگر یار واقعاً برنده است یا فعلاً برنده است (حتی اگر strongest نیست)
       final maxOnTable = strongestCard([firstCard, secondCard],
           hokm: hokm == leadSuit ? null : hokm);
       final partnerIsCurrentlyWinning = maxOnTable == firstCard;
-      print('[DEBUG][thirdCard] partnerIsCurrentlyWinning: '
-          '\u001b[36m$partnerIsCurrentlyWinning\u001b[0m, maxOnTable: $maxOnTable');
-      if (partnerIsTrulyWinning || partnerIsCurrentlyWinning) {
+      // اگر یار واقعاً برنده است
+      if (partnerIsTrulyWinning) {
+        // فقط ضعیف‌ترین کارت همان خال را بازی کن
         print(
-            '[$name][$direction] (نفر سوم): یار برنده است، ضعیف‌ترین همان خال را بازی می‌کنم');
+            '[$name][$direction] (نفر سوم): یار واقعاً برنده است، ضعیف‌ترین همان خال را بازی می‌کنم');
         return weakestCard(sameSuitCards);
-      } else {
+      } else if (partnerIsCurrentlyWinning) {
+        // اگر کارت برنده داری، قوی‌ترین کارت برنده را بازی کن، وگرنه ضعیف‌ترین همان خال
         final winning = sameSuitCards
             .where((c) => c.rank.index < maxOnTable.rank.index)
             .toList();
         if (winning.isNotEmpty) {
           print(
-              '[$name][$direction] (نفر سوم): کارت قوی‌تر همان خال را داری که می‌تواند برنده شود، قوی‌ترین کارت برنده همان خال را بازی کن');
+              '[$name][$direction] (نفر سوم): کارت همان خال را داری که می‌تواند برنده شود');
+          return strongestCard(winning);
+        } else {
+          print(
+              '[$name][$direction] (نفر سوم): کارت قوی خال را نداری، ضعیف‌ترین کارت همان خال را بازی کن');
+          return weakestCard(sameSuitCards);
+        }
+      } else {
+        // اگر یار برنده نیست، سعی کن دست را ببری
+        final winning = sameSuitCards
+            .where((c) => c.rank.index < maxOnTable.rank.index)
+            .toList();
+        if (winning.isNotEmpty) {
+          print(
+              '[$name][$direction] (نفر سوم): کارت قوی‌تر خال را داری که برنده شود، قوی‌ترین کارت برنده را بازی کن');
           return strongestCard(winning);
         } else {
           print(
@@ -514,7 +547,7 @@ class PlayerAI extends Player {
       // کارت همان خال را نداری
       if (partnerIsTrulyWinning) {
         print(
-            '[$name][$direction] (نفر سوم): کارت همان خال ندارم و یار واقعاً برنده است، ضعیف‌ترین غیرحکم را بازی می‌کنم');
+            '[$name][$direction] (نفر سوم): کارت خال ندارم و یار واقعاً برنده است، ضعیف‌ترین غیرحکم را بازی می‌کنم');
         return weakestCard(nonHokmCards.isNotEmpty ? nonHokmCards : hand);
       }
       // اگر حکم داری و می‌توانی با حکم قوی‌تر دست را ببری
@@ -633,7 +666,8 @@ class PlayerAI extends Player {
           } else {
             print(
                 '[$name][$direction] (نفر چهارم): حکم داری اما نمی‌توانی دست را ببری، ضعیف‌ترین حکم را بازی می‌کنم');
-            return weakestCard(hokmCards);
+            return weakestCard(
+                nonHokmCards.isNotEmpty ? nonHokmCards : hokmCards);
           }
         } else {
           // هیچ حکمی روی میز نیست، پس هر حکمی برنده است

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math';
 
 import 'package:audioplayers/audioplayers.dart';
@@ -60,7 +61,9 @@ class GameController extends GetxController {
   final AudioPlayer _audioPlayer = AudioPlayer();
   Direction? currentHakemDir;
   bool isFirstGame = true;
+  bool _isActive = true;
 
+  /// پخش صدای مورد نظر با نام داده شده
   Future<void> playSound(String name) async {
     try {
       await _audioPlayer.stop();
@@ -68,6 +71,7 @@ class GameController extends GetxController {
     } catch (_) {}
   }
 
+  /// مقداردهی اولیه کنترلر و بازی
   @override
   void onInit() {
     super.onInit();
@@ -75,6 +79,7 @@ class GameController extends GetxController {
     _initializeCards();
   }
 
+  /// مقداردهی اولیه کارت‌ها و وضعیت بازی
   void _initializeCards() {
     tableCards.clear();
     animatedPlayedCards.clear();
@@ -101,6 +106,7 @@ class GameController extends GetxController {
     game.deck = List.from(newDeck);
   }
 
+  /// شروع بازی و تعیین حاکم
   void startGame() async {
     snackMessage(title: 'انتخاب حاکم');
     showStartButton.value = false;
@@ -114,6 +120,7 @@ class GameController extends GetxController {
     }
   }
 
+  /// شروع بازی با حاکم مشخص
   Future<void> startGameWithHakem(Direction hakemDir) async {
     for (var h in game.hands) {
       h.clear();
@@ -174,6 +181,7 @@ class GameController extends GetxController {
     }
   }
 
+  /// توزیع کارت برای تعیین حاکم
   Future<void> _distributeCardsForHakem() async {
     for (var h in game.hands) {
       h.clear();
@@ -202,6 +210,7 @@ class GameController extends GetxController {
     int currentPlayerIndex = 0;
     bool hakemFound = false;
     while (currentCardIndex < cards.length) {
+      if (!_isActive) return;
       final currentCard = cards[currentCardIndex];
       final currentPlayer = distributionOrder[currentPlayerIndex];
       playSound('pakhsh.mp3');
@@ -210,11 +219,13 @@ class GameController extends GetxController {
       animatedCards.add(animData);
       update();
       await Future.delayed(const Duration(milliseconds: 350));
+      if (!_isActive) return;
       playerCards[currentPlayer]?.add(currentCard);
       animatedCards.removeWhere((a) => a.key == animData.key);
       cards.removeAt(currentCardIndex);
       update();
       await Future.delayed(const Duration(milliseconds: 60));
+      if (!_isActive) return;
       if (currentCard.rank == Rank.ace) {
         hokmPlayer.value = currentPlayer;
         showTajAndCircle.value = true;
@@ -233,6 +244,7 @@ class GameController extends GetxController {
     }
     if (hakemFound) {
       await Future.delayed(const Duration(seconds: 2));
+      if (!_isActive) return;
       for (var list in playerCards.values) {
         list.clear();
       }
@@ -279,6 +291,7 @@ class GameController extends GetxController {
     }
   }
 
+  /// همگام‌سازی دست بازیکنان با رابط کاربری
   void _syncHandsWithUI() {
     for (var pos in ['bottom', 'right', 'top', 'left']) {
       playerCards[pos]?.clear();
@@ -295,10 +308,12 @@ class GameController extends GetxController {
     _sortBottomPlayerCards();
   }
 
+  /// دریافت ترتیب توزیع کارت از یک جهت خاص
   List<Direction> _getDistributionOrder(Direction start) {
     return List.generate(4, (i) => Direction.values[(start.index + i) % 4]);
   }
 
+  /// توزیع مرحله‌ای کارت‌ها به بازیکنان
   Future<void> _dealCardsStepByStep(int numCards) async {
     final order = _getDistributionOrder(game.hakem);
     for (final dir in order) {
@@ -322,6 +337,7 @@ class GameController extends GetxController {
     _syncHandsWithUI();
   }
 
+  /// تبدیل رشته موقعیت به جهت بازیکن
   Direction _stringToDirection(String pos) {
     switch (pos) {
       case 'bottom':
@@ -337,6 +353,7 @@ class GameController extends GetxController {
     }
   }
 
+  /// تبدیل جهت بازیکن به رشته موقعیت
   String _directionToString(Direction dir) {
     switch (dir) {
       case Direction.bottom:
@@ -350,6 +367,7 @@ class GameController extends GetxController {
     }
   }
 
+  /// انتخاب حکم توسط بازیکن یا هوش مصنوعی
   void selectHokm(Suit suit) async {
     selectedHokm.value = suit;
     showHokmDialog.value = false;
@@ -368,6 +386,7 @@ class GameController extends GetxController {
     }
   }
 
+  /// مرتب‌سازی کارت‌های بازیکن پایین
   void _sortBottomPlayerCards() {
     if (playerCards['bottom']?.isNotEmpty ?? false) {
       playerCards['bottom']?.sort((a, b) {
@@ -385,6 +404,7 @@ class GameController extends GetxController {
     }
   }
 
+  /// بازی کردن یک کارت توسط بازیکن یا هوش مصنوعی
   void playCard(GameCard card) {
     if (!canPlayCard(card)) return;
     final dir = Direction.values
@@ -441,6 +461,7 @@ class GameController extends GetxController {
     }
   }
 
+  /// بازی خودکار کارت توسط هوش مصنوعی
   void _playComputerCard() {
     if (currentPlayer.value == 'bottom') return;
     final dir = Direction.values
@@ -456,8 +477,9 @@ class GameController extends GetxController {
     playCard(card);
   }
 
+  /// مدیریت پایان یک دست و بروزرسانی امتیازات
   Future<void> _endHandUI(String winner) async {
-    await Future.delayed(const Duration(seconds: 2));
+    await Future.delayed(const Duration(seconds: 1));
     if (winner == 'bottom' || winner == 'top') {
       teamScores['team1']?.value++;
       team1WonHands.add(1);
@@ -470,7 +492,7 @@ class GameController extends GetxController {
       _endSet();
       return;
     }
-    await Future.delayed(const Duration(seconds: 2));
+    await Future.delayed(const Duration(seconds: 1));
     tableCards.clear();
     firstSuit.value = null;
     currentPlayer.value = winner;
@@ -482,6 +504,7 @@ class GameController extends GetxController {
     }
   }
 
+  /// مدیریت پایان یک ست و شروع ست جدید
   void _endSet() {
     String winningTeam;
     if (teamScores['team1']?.value == 7) {
@@ -510,27 +533,46 @@ class GameController extends GetxController {
       _endGame();
       return;
     }
+    int secondsLeft = 3;
+    Timer? timer;
+
     Get.dialog(
-      AlertDialog(
-        title: Text('ست جدید'),
-        content: Text(winningTeam == 'team1'
-            ? 'شما و یار یک ست بردید!'
-            : 'حریفان یک ست بردند!'),
-        actions: [
-          TextButton(
-            onPressed: () {
+      StatefulBuilder(
+        builder: (context, setState) {
+          timer ??= Timer.periodic(Duration(seconds: 1), (t) {
+            if (secondsLeft > 1) {
+              setState(() => secondsLeft--);
+            } else {
+              t.cancel();
               Get.back();
               _initializeCards();
               startGame();
-            },
-            child: Text('ادامه'),
-          ),
-        ],
+            }
+          });
+          return AlertDialog(
+            title: Text('ست جدید'),
+            content: Text(winningTeam == 'team1'
+                ? 'شما و یار یک ست بردید!'
+                : 'حریفان یک ست بردند!'),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  timer?.cancel();
+                  Get.back();
+                  _initializeCards();
+                  startGame();
+                },
+                child: Text('ادامه ($secondsLeft)'),
+              ),
+            ],
+          );
+        },
       ),
       barrierDismissible: false,
     );
   }
 
+  /// مدیریت پایان کامل بازی و نمایش برنده
   void _endGame() {
     final winningTeam = teamSets['team1']?.value == 7 ? 'team1' : 'team2';
     final winningTeamName = winningTeam == 'team1' ? 'شما ' : 'حریف ';
@@ -552,6 +594,7 @@ class GameController extends GetxController {
     );
   }
 
+  /// بررسی امکان بازی کردن کارت توسط بازیکن
   bool canPlayCard(GameCard card) {
     if (!isBottomPlayerTurn.value && currentPlayer.value != 'bottom') {
       return true;
@@ -574,6 +617,7 @@ class GameController extends GetxController {
     return true;
   }
 
+  /// بررسی فعال بودن کارت برای بازی توسط بازیکن
   bool isCardPlayable(GameCard card) {
     if (!isBottomPlayerTurn.value) {
       return false;
@@ -591,6 +635,7 @@ class GameController extends GetxController {
     return true;
   }
 
+  /// نمایش پیام کوتاه به کاربر
   void snackMessage({required String title}) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
@@ -612,12 +657,14 @@ class GameController extends GetxController {
     );
   }
 
+  /// حذف کارت بالایی از لیست کارت‌ها
   void removeTopCard() {
     if (currentCardIndex.value < cards.length) {
       currentCardIndex.value++;
     }
   }
 
+  /// دریافت نام بازیکن بر اساس موقعیت
   String getPlayerName(String position) {
     switch (position) {
       case 'bottom':
@@ -633,8 +680,10 @@ class GameController extends GetxController {
     }
   }
 
+  /// پاکسازی منابع صوتی هنگام بستن کنترلر
   @override
   void onClose() {
+    _isActive = false;
     _audioPlayer.stop();
     _audioPlayer.dispose();
     super.onClose();

@@ -19,8 +19,8 @@ void main() async {
   ));
   //! چرخش صفحه
   await SystemChrome.setPreferredOrientations([
-    DeviceOrientation.landscapeLeft,
-    DeviceOrientation.landscapeRight,
+    // DeviceOrientation.landscapeLeft,
+    // DeviceOrientation.landscapeRight,
   ]);
 
   await GetStorage.init();

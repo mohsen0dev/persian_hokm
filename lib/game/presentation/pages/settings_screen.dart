@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
@@ -75,6 +76,7 @@ class SettingsScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final orientation = MediaQuery.of(context).orientation;
     return Scaffold(
       appBar: AppBar(
         title: Row(
@@ -102,50 +104,163 @@ class SettingsScreen extends StatelessWidget {
           ],
         ),
         centerTitle: true,
+        backgroundColor: Colors.deepPurple.shade700,
+        elevation: 2,
       ),
-      body: Obx(() {
-        return ListView(
-          padding: const EdgeInsets.all(16.0),
-          children: [
-            _sectionTitle('سرعت پخش کارت‌ها'),
-            _buildAnimationSpeedChips(),
-            const Divider(height: 24),
-            _sectionTitle('هوش مصنوعی حریفان'),
-            _buildAILevelChips(),
-            const Divider(height: 24),
-            _sectionTitle('پس‌زمینه صفحه بازی'),
-            _buildBackgroundPicker(),
-            const Divider(height: 24),
-            _sectionTitle('طرح پشت کارت‌ها'),
-            _buildCardBackPicker(),
-            const SizedBox(height: 24),
-          ],
-        );
-      }),
+      body: Container(
+        width: double.infinity,
+        height: double.infinity,
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topRight,
+            end: Alignment.bottomLeft,
+            colors: [
+              Color(0xFF232526),
+              Color(0xFF414345),
+            ],
+          ),
+        ),
+        child: Obx(() {
+          if (orientation == Orientation.portrait) {
+            return SingleChildScrollView(
+              padding: EdgeInsets.only(left: 16, right: 16),
+              child: ConstrainedBox(
+                constraints: BoxConstraints(
+                  minHeight: MediaQuery.of(context).size.height - 100,
+                ),
+                child: IntrinsicHeight(
+                  child: Column(
+                    children: [
+                      _settingsCard([
+                        _sectionTitle('سرعت پخش کارت‌ها'),
+                        _buildAnimationSpeedChips(),
+                      ]),
+                      _settingsCard([
+                        _sectionTitle('هوش مصنوعی حریفان'),
+                        _buildAILevelChips(),
+                      ]),
+                      _settingsCard([
+                        _sectionTitle('پس‌زمینه صفحه بازی'),
+                        _buildBackgroundPicker(),
+                      ]),
+                      _settingsCard([
+                        _sectionTitle('طرح پشت کارت‌ها'),
+                        _buildCardBackPicker(),
+                      ]),
+                      const SizedBox(height: 24),
+                    ],
+                  ),
+                ),
+              ),
+            );
+          } else {
+            // حالت افقی: دو ستون اسکرول‌پذیر
+            return SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Container(
+                    width: MediaQuery.of(context).size.width / 2,
+                    padding: EdgeInsets.only(left: 8, right: 16),
+                    child: ListView(
+                      children: [
+                        _settingsCard([
+                          _sectionTitle('سرعت پخش کارت‌ها'),
+                          SizedBox(height: 14),
+                          _buildAnimationSpeedChips(),
+                          SizedBox(height: 14),
+                        ]),
+                        _settingsCard([
+                          _sectionTitle('هوش مصنوعی حریفان'),
+                          SizedBox(height: 14),
+                          _buildAILevelChips(),
+                          SizedBox(height: 14),
+                        ]),
+                      ],
+                    ),
+                  ),
+                  Container(
+                    width: MediaQuery.of(context).size.width / 2,
+                    padding: EdgeInsets.only(left: 16, right: 8),
+                    child: ListView(
+                      // physics: NeverScrollableScrollPhysics(),
+                      children: [
+                        _settingsCard([
+                          _sectionTitle('پس‌زمینه صفحه بازی'),
+                          SizedBox(height: 5),
+                          _buildBackgroundPicker(),
+                        ]),
+                        _settingsCard([
+                          _sectionTitle('طرح پشت کارت‌ها'),
+                          SizedBox(height: 5),
+                          _buildCardBackPicker(),
+                        ]),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            );
+          }
+        }),
+      ),
     );
   }
 
+  Widget _settingsCard(List<Widget> children) => Container(
+        constraints: const BoxConstraints(minWidth: 220),
+        child: Card(
+          color: const Color(0xFF232526).withOpacity(0.92),
+          elevation: 8,
+          margin: const EdgeInsets.symmetric(vertical: 12),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(18),
+            side: const BorderSide(color: Colors.white24, width: 1.2),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: children,
+            ),
+          ),
+        ),
+      );
+
   Widget _sectionTitle(String title) => Padding(
         padding: const EdgeInsets.only(bottom: 8.0, top: 8),
-        child: Text(title, style: const TextStyle(fontWeight: FontWeight.bold)),
+        child: Row(
+          children: [
+            Icon(Icons.tune, color: Colors.deepPurple.shade400, size: 22),
+            const SizedBox(width: 8),
+            Text(title,
+                style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontFamily: 'Vazirmatn',
+                    fontSize: 16)),
+          ],
+        ),
       );
 
   Widget _buildAnimationSpeedChips() {
     final labels = ['کم', 'عادی', 'تند'];
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: List.generate(
+    return Center(
+      child: Wrap(
+        alignment: WrapAlignment.center,
+        spacing: 8,
+        runSpacing: 8,
+        children: List.generate(
           3,
-          (i) => Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 6),
-                child: ChoiceChip(
-                  label: Text(labels[i]),
-                  selected: settingsController.animationSpeed.value == i,
-                  onSelected: (selected) =>
-                      settingsController.animationSpeed.value = i,
-                  selectedColor: Colors.purple.shade200,
-                ),
-              )),
+          (i) => ChoiceChip(
+            label: Text(labels[i]),
+            selected: settingsController.animationSpeed.value == i,
+            onSelected: (selected) =>
+                settingsController.animationSpeed.value = i,
+            selectedColor: Colors.purple.shade200,
+          ),
+        ),
+      ),
     );
   }
 
@@ -156,29 +271,33 @@ class SettingsScreen extends StatelessWidget {
       Icons.sentiment_satisfied,
       Icons.sentiment_very_satisfied
     ];
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: List.generate(
+    return Center(
+      child: Wrap(
+        alignment: WrapAlignment.center,
+        spacing: 8,
+        runSpacing: 8,
+        children: List.generate(
           3,
-          (i) => Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 6),
-                child: ChoiceChip(
-                  avatar: Icon(icons[i],
-                      color: settingsController.aiLevel.value == i
-                          ? Colors.white
-                          : Colors.grey),
-                  label: Text(labels[i]),
-                  selected: settingsController.aiLevel.value == i,
-                  onSelected: (selected) =>
-                      settingsController.aiLevel.value = i,
-                  selectedColor: Colors.purple.shade200,
-                ),
-              )),
+          (i) => ChoiceChip(
+            avatar: Icon(
+              icons[i],
+              color: settingsController.aiLevel.value == i
+                  ? Colors.white
+                  : Colors.grey,
+            ),
+            label: Text(labels[i]),
+            selected: settingsController.aiLevel.value == i,
+            onSelected: (selected) => settingsController.aiLevel.value = i,
+            selectedColor: Colors.purple.shade200,
+          ),
+        ),
+      ),
     );
   }
 
   Widget _buildBackgroundPicker() {
-    final selectedColor = Colors.purple.shade200;
+    final selectedColor = Colors.purple.shade800;
+
     return Wrap(
       spacing: 12,
       runSpacing: 12,
@@ -244,7 +363,7 @@ class SettingsScreen extends StatelessWidget {
   }
 
   Widget _buildCardBackPicker() {
-    final selectedColor = Colors.purple.shade200;
+    final selectedColor = Colors.purple.shade800;
     return Wrap(
       spacing: 12,
       runSpacing: 12,
@@ -257,6 +376,7 @@ class SettingsScreen extends StatelessWidget {
                     width: 56,
                     height: 56,
                     decoration: BoxDecoration(
+                      // color: settingsController.cardBackColors[i],
                       color: settingsController.cardBackColors[i],
                       shape: BoxShape.circle,
                       border: Border.all(
@@ -286,7 +406,7 @@ class SettingsScreen extends StatelessWidget {
                         color: settingsController.cardBackIndex.value ==
                                 i + settingsController.cardBackColors.length
                             ? selectedColor
-                            : Colors.grey.shade200,
+                            : Colors.grey,
                         width: 3,
                       ),
                       image: DecorationImage(

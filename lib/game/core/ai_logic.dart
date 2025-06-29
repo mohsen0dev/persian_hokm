@@ -15,7 +15,8 @@ bool isStrongestCard(GameCard card, List<GameCard> playedCards) {
 
 /// پیدا کردن ضعیف‌ترین کارت از یک لیست کارت
 GameCard weakestCard(List<GameCard> cards) {
-  return cards.reduce((a, b) => a.rank.index < b.rank.index ? b : a);
+  // return cards.reduce((a, b) => a.rank.index < b.rank.index ? b : a);
+  return cards.reduce((a, b) => a.rank.index > b.rank.index ? a : b);
 }
 
 /// پیدا کردن قوی‌ترین کارت یا برنده از یک لیست کارت
@@ -28,7 +29,6 @@ GameCard strongestCard(List<GameCard> cards, {Suit? hokm}) {
       return hokmCards.reduce((a, b) => a.rank.index < b.rank.index ? a : b);
     }
   }
-
   // در غیر این صورت، قوی‌ترین کارت بر اساس rank
   return cards.reduce((a, b) => a.rank.index < b.rank.index ? a : b);
 }

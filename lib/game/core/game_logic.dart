@@ -163,6 +163,26 @@ class GameLogic {
       tableDir = winner.direction;
       starterDirection = winner.direction; // مقداردهی جهت شروع‌کننده دست بعدی
       tableHistory.add(List.from(table));
+      // به‌روزرسانی آخرین خال بازی‌شده توسط یار برای هر بازیکن
+      if (players.length == 4) {
+        final lastHand = tableHistory.last;
+        int starterIdx =
+            players.indexWhere((p) => p.direction == starterDirection);
+        for (int i = 0; i < 4; i++) {
+          final player = players[i];
+          // پیدا کردن یار (هم‌تیمی)
+          final partner = player.team.playerA == player
+              ? player.team.playerB
+              : player.team.playerA;
+          // موقعیت یار در دست
+          int partnerOffset = players.indexOf(partner);
+          final partnerCard = lastHand[partnerOffset];
+          // فقط اگر یار نفر اول دست قبلی بوده
+          if (partnerOffset == starterIdx) {
+            player.updateLastPartnerSuit(partnerCard.suit);
+          }
+        }
+      }
       table.clear();
     }
   }
