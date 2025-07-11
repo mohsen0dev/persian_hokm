@@ -20,6 +20,8 @@ class GameScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isLandscape =
+        MediaQuery.of(context).orientation == Orientation.landscape;
     return PopScope(
       canPop: false,
       onPopInvokedWithResult: (bool didPop, PopupRoute? route) async {
@@ -72,7 +74,7 @@ class GameScreen extends StatelessWidget {
                         ),
                       ),
                 textTop(context),
-                cardCenter(),
+                cardCenter(isLandscape),
                 Obx(() => controller.showCards.value
                     ? Container(child: cardBotton())
                     : SizedBox()),
@@ -133,7 +135,7 @@ class GameScreen extends StatelessWidget {
         MediaQuery.of(context).orientation == Orientation.landscape;
 
     if (!isLandscape) {
-      // حالت عمودی (همان ساختار فعلی)
+      // حالت عمودی
       return Positioned(
         top: 70,
         left: 35,
@@ -161,32 +163,42 @@ class GameScreen extends StatelessWidget {
                             children: List.generate(7, (i) {
                               if (i < controller.team1WonHands.length) {
                                 return Padding(
-                                  padding: const EdgeInsets.symmetric(
-                                      horizontal: 1.5),
-                                  child: isColor
-                                      ? Container(
-                                          width: 14,
-                                          height: 21,
-                                          decoration: BoxDecoration(
-                                            color: settingsController
-                                                .cardBackColors[idx],
-                                            borderRadius:
-                                                BorderRadius.circular(3),
-                                            border: Border.all(
-                                              color: Colors.grey,
-                                              width: 1,
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 1.5),
+                                    child: isColor
+                                        ? Container(
+                                            width: 14,
+                                            height: 21,
+                                            decoration: BoxDecoration(
+                                              color: settingsController
+                                                  .cardBackColors[idx],
+                                              borderRadius:
+                                                  BorderRadius.circular(3),
+                                              border: Border.all(
+                                                color: Colors.grey,
+                                                width: 1,
+                                              ),
                                             ),
-                                          ),
-                                        )
-                                      : Image.asset(
-                                          settingsController.cardBackImages[
-                                              idx -
-                                                  settingsController
-                                                      .cardBackColors.length],
-                                          width: 18,
-                                          height: 21,
-                                        ),
-                                );
+                                          )
+                                        : Container(
+                                            decoration: BoxDecoration(
+                                              borderRadius:
+                                                  BorderRadius.circular(3),
+                                              border: Border.all(
+                                                color: Colors.grey,
+                                                width: 1,
+                                              ),
+                                            ),
+                                            child: Image.asset(
+                                              settingsController.cardBackImages[
+                                                  idx -
+                                                      settingsController
+                                                          .cardBackColors
+                                                          .length],
+                                              width: 13,
+                                              height: 20,
+                                            ),
+                                          ));
                               } else {
                                 return Padding(
                                     padding: const EdgeInsets.symmetric(
@@ -243,13 +255,23 @@ class GameScreen extends StatelessWidget {
                                             ),
                                           ),
                                         )
-                                      : Image.asset(
-                                          settingsController.cardBackImages[
-                                              idx -
-                                                  settingsController
-                                                      .cardBackColors.length],
-                                          width: 18,
-                                          height: 21,
+                                      : Container(
+                                          decoration: BoxDecoration(
+                                            borderRadius:
+                                                BorderRadius.circular(3),
+                                            border: Border.all(
+                                              color: Colors.grey,
+                                              width: 1,
+                                            ),
+                                          ),
+                                          child: Image.asset(
+                                            settingsController.cardBackImages[
+                                                idx -
+                                                    settingsController
+                                                        .cardBackColors.length],
+                                            width: 13,
+                                            height: 20,
+                                          ),
                                         ),
                                 );
                               } else {
@@ -305,7 +327,7 @@ class GameScreen extends StatelessWidget {
     } else {
       // حالت افقی (ساختار جدید)
       return Positioned(
-        top: 55,
+        top: 44,
         left: 40,
         right: 40,
         child: Row(
@@ -324,30 +346,41 @@ class GameScreen extends StatelessWidget {
                         children: List.generate(7, (i) {
                           if (i < controller.team1WonHands.length) {
                             return Padding(
-                              padding:
-                                  const EdgeInsets.symmetric(horizontal: 3),
-                              child: isColor
-                                  ? Container(
-                                      width: 14,
-                                      height: 21,
-                                      decoration: BoxDecoration(
-                                        color: settingsController
-                                            .cardBackColors[idx],
-                                        borderRadius: BorderRadius.circular(3),
-                                        border: Border.all(
-                                          color: Colors.grey,
-                                          width: 1,
+                                padding:
+                                    const EdgeInsets.symmetric(horizontal: 3),
+                                child: isColor
+                                    ? Container(
+                                        width: 14,
+                                        height: 21,
+                                        decoration: BoxDecoration(
+                                          color: settingsController
+                                              .cardBackColors[idx],
+                                          borderRadius:
+                                              BorderRadius.circular(3),
+                                          border: Border.all(
+                                            color: Colors.grey,
+                                            width: 1,
+                                          ),
                                         ),
-                                      ),
-                                    )
-                                  : Image.asset(
-                                      settingsController.cardBackImages[idx -
-                                          settingsController
-                                              .cardBackColors.length],
-                                      width: 18,
-                                      height: 21,
-                                    ),
-                            );
+                                      )
+                                    : Container(
+                                        decoration: BoxDecoration(
+                                          borderRadius:
+                                              BorderRadius.circular(3),
+                                          border: Border.all(
+                                            color: Colors.grey,
+                                            width: 1,
+                                          ),
+                                        ),
+                                        child: Image.asset(
+                                          settingsController.cardBackImages[
+                                              idx -
+                                                  settingsController
+                                                      .cardBackColors.length],
+                                          width: 13,
+                                          height: 20,
+                                        ),
+                                      ));
                           } else {
                             return Padding(
                                 padding:
@@ -408,30 +441,41 @@ class GameScreen extends StatelessWidget {
                         children: List.generate(7, (i) {
                           if (i < controller.team2WonHands.length) {
                             return Padding(
-                              padding:
-                                  const EdgeInsets.symmetric(horizontal: 3),
-                              child: isColor
-                                  ? Container(
-                                      width: 14,
-                                      height: 21,
-                                      decoration: BoxDecoration(
-                                        color: settingsController
-                                            .cardBackColors[idx],
-                                        borderRadius: BorderRadius.circular(3),
-                                        border: Border.all(
-                                          color: Colors.black,
-                                          width: 1,
+                                padding:
+                                    const EdgeInsets.symmetric(horizontal: 3),
+                                child: isColor
+                                    ? Container(
+                                        width: 14,
+                                        height: 21,
+                                        decoration: BoxDecoration(
+                                          color: settingsController
+                                              .cardBackColors[idx],
+                                          borderRadius:
+                                              BorderRadius.circular(3),
+                                          border: Border.all(
+                                            color: Colors.black,
+                                            width: 1,
+                                          ),
                                         ),
-                                      ),
-                                    )
-                                  : Image.asset(
-                                      settingsController.cardBackImages[idx -
-                                          settingsController
-                                              .cardBackColors.length],
-                                      width: 18,
-                                      height: 21,
-                                    ),
-                            );
+                                      )
+                                    : Container(
+                                        decoration: BoxDecoration(
+                                          borderRadius:
+                                              BorderRadius.circular(3),
+                                          border: Border.all(
+                                            color: Colors.grey,
+                                            width: 1,
+                                          ),
+                                        ),
+                                        child: Image.asset(
+                                          settingsController.cardBackImages[
+                                              idx -
+                                                  settingsController
+                                                      .cardBackColors.length],
+                                          width: 13,
+                                          height: 20,
+                                        ),
+                                      ));
                           } else {
                             return Padding(
                                 padding:
@@ -475,7 +519,9 @@ class GameScreen extends StatelessWidget {
   }
 
   /// کارت های مرکزی
-  Widget cardCenter() {
+  Widget cardCenter(bool isLandscape) {
+    double h = isLandscape ? 170 : 300;
+    double w = isLandscape ? 350 : 180;
     return Positioned(
       bottom: 0,
       top: 0,
@@ -496,8 +542,8 @@ class GameScreen extends StatelessWidget {
                   ),
                 )
               : SizedBox(
-                  height: 150,
-                  width: 250,
+                  height: h,
+                  width: w,
                   child: Stack(
                     alignment: Alignment.center,
                     children: [
