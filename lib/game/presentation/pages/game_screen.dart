@@ -7,6 +7,7 @@ import 'package:persian_hokm/game/presentation/pages/settings_screen.dart';
 import 'package:persian_hokm/game/presentation/widgets/animated_card.dart';
 import 'package:persian_hokm/game/presentation/widgets/card_widget.dart';
 import 'package:persian_hokm/game/presentation/widgets/played_animated_card.dart';
+import 'package:persian_hokm/game/presentation/widgets/screen_size_guard.dart';
 
 class GameScreen extends StatelessWidget {
   /// کنترلر اصلی بازی که منطق و وضعیت بازی را مدیریت می‌کند.
@@ -51,67 +52,73 @@ class GameScreen extends StatelessWidget {
       child: Obx(() {
         final idx = settingsController.backgroundIndex.value;
         final isColor = idx < settingsController.backgroundColors.length;
-        return Scaffold(
-          body: Stack(
-            alignment: Alignment.center,
-            fit: StackFit.expand,
-            children: [
-              isColor
-                  ? Container(color: settingsController.backgroundColors[idx])
-                  : Container(
-                      decoration: BoxDecoration(
-                        image: DecorationImage(
-                          image: AssetImage(settingsController.backgroundImages[
-                              idx -
-                                  settingsController.backgroundColors.length]),
-                          fit: BoxFit.fill,
+        return ScreenSizeGuard(
+          child: Scaffold(
+            body: Stack(
+              alignment: Alignment.center,
+              fit: StackFit.expand,
+              children: [
+                isColor
+                    ? Container(color: settingsController.backgroundColors[idx])
+                    : Container(
+                        decoration: BoxDecoration(
+                          image: DecorationImage(
+                            image: AssetImage(
+                                settingsController.backgroundImages[idx -
+                                    settingsController
+                                        .backgroundColors.length]),
+                            fit: BoxFit.fill,
+                          ),
                         ),
                       ),
-                    ),
-              textTop(context),
-              cardCenter(),
-              Obx(() => controller.showCards.value ? cardBotton() : SizedBox()),
-              Obx(() => controller.showCards.value ? cardLeft() : SizedBox()),
-              Obx(() => controller.showCards.value ? cardRight() : SizedBox()),
-              Obx(() => controller.showCards.value ? cardTop() : SizedBox()),
-              Positioned(
-                right: 4,
-                top: 4,
-                child: CircleAvatar(
-                  child: CloseButton(),
+                textTop(context),
+                cardCenter(),
+                Obx(() => controller.showCards.value
+                    ? Container(child: cardBotton())
+                    : SizedBox()),
+                Obx(() => controller.showCards.value ? cardLeft() : SizedBox()),
+                Obx(() =>
+                    controller.showCards.value ? cardRight() : SizedBox()),
+                Obx(() => controller.showCards.value ? cardTop() : SizedBox()),
+                Positioned(
+                  right: 4,
+                  top: 4,
+                  child: CircleAvatar(
+                    child: CloseButton(),
+                  ),
                 ),
-              ),
-              Obx(() => controller.showHokmDialog.value &&
-                      controller.hokmPlayer.value == 'bottom'
-                  ? _buildHokmSelectionDialog()
-                  : SizedBox()),
-              // نمایش کارت‌های متحرک بالای همه ویجت‌ها
-              Obx(() => Stack(
-                    children: [
-                      for (final animCard in controller.animatedCards)
-                        AnimatedCard(
-                          key: animCard.key,
-                          card: animCard.card,
-                          targetPosition: animCard.targetPosition,
-                          showBack: true,
-                        ),
-                    ],
-                  )),
-              // نمایش کارت‌های متحرک بازی (از دست بازیکن به مرکز)
-              Obx(() => Center(
-                    child: Stack(
+                Obx(() => controller.showHokmDialog.value &&
+                        controller.hokmPlayer.value == 'bottom'
+                    ? _buildHokmSelectionDialog()
+                    : SizedBox()),
+                // نمایش کارت‌های متحرک بالای همه ویجت‌ها
+                Obx(() => Stack(
                       children: [
-                        for (final animCard in controller.animatedPlayedCards)
-                          PlayedAnimatedCard(
+                        for (final animCard in controller.animatedCards)
+                          AnimatedCard(
                             key: animCard.key,
                             card: animCard.card,
-                            fromPosition: animCard.fromPosition,
-                            isCut: animCard.isCut,
+                            targetPosition: animCard.targetPosition,
+                            showBack: true,
                           ),
                       ],
-                    ),
-                  )),
-            ],
+                    )),
+                // نمایش کارت‌های متحرک بازی (از دست بازیکن به مرکز)
+                Obx(() => Center(
+                      child: Stack(
+                        children: [
+                          for (final animCard in controller.animatedPlayedCards)
+                            PlayedAnimatedCard(
+                              key: animCard.key,
+                              card: animCard.card,
+                              fromPosition: animCard.fromPosition,
+                              isCut: animCard.isCut,
+                            ),
+                        ],
+                      ),
+                    )),
+              ],
+            ),
           ),
         );
       }),
@@ -122,146 +129,344 @@ class GameScreen extends StatelessWidget {
   Widget textTop(BuildContext context) {
     final idx = settingsController.cardBackIndex.value;
     final isColor = idx < settingsController.cardBackColors.length;
-    return Positioned(
-      top: 45,
-      left: 60,
-      right: 50,
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              bkgText(
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.end,
-                      children: [
-                        Obx(() => Text('شمــا: ست: '
-                            '${controller.teamSets['team1']?.value}  |  دست: ${controller.teamScores['team1']?.value}')),
-                      ],
-                    ),
-                    SizedBox(width: 4),
-                    Obx(() => Row(
-                          children: [
-                            for (int i = 0;
-                                i < controller.team1WonHands.length;
-                                i++)
-                              Padding(
-                                padding:
-                                    const EdgeInsets.symmetric(horizontal: 1.5),
-                                child: isColor
-                                    ? Container(
-                                        width: 14,
-                                        height: 21,
-                                        decoration: BoxDecoration(
-                                          color: settingsController
-                                              .cardBackColors[idx],
-                                          borderRadius:
-                                              BorderRadius.circular(3),
-                                          border: Border.all(
-                                            color: Colors.black,
-                                            width: 1,
-                                          ),
-                                        ),
-                                      )
-                                    : Image.asset(
-                                        settingsController.cardBackImages[idx -
-                                            settingsController
-                                                .cardBackColors.length],
-                                        // fit: BoxFit.cover,
-                                        width: 18,
-                                        height: 21,
-                                      ),
-                              ),
-                          ],
-                        )),
-                  ],
-                ),
-              ),
-              SizedBox(height: 10),
-              bkgText(
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.end,
-                      children: [
-                        Obx(() => Text('حریف: ست: '
-                            '${controller.teamSets['team2']?.value}  |  دست: ${controller.teamScores['team2']?.value}')),
-                      ],
-                    ),
-                    SizedBox(width: 4),
-                    Obx(() => Row(
-                          children: [
-                            for (int i = 0;
-                                i < controller.team2WonHands.length;
-                                i++)
-                              Padding(
-                                padding:
-                                    const EdgeInsets.symmetric(horizontal: 1.5),
-                                child: isColor
-                                    ? Container(
-                                        width: 14,
-                                        height: 21,
-                                        decoration: BoxDecoration(
-                                          color: settingsController
-                                              .cardBackColors[idx],
-                                          borderRadius:
-                                              BorderRadius.circular(3),
-                                          border: Border.all(
-                                            color: Colors.black,
-                                            width: 1,
-                                          ),
-                                        ),
-                                      )
-                                    : Image.asset(
-                                        settingsController.cardBackImages[idx -
-                                            settingsController
-                                                .cardBackColors.length],
-                                        // fit: BoxFit.cover,
-                                        width: 18,
-                                        height: 21,
-                                      ),
-                              ),
-                          ],
-                        )),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          Obx(() => controller.selectedHokm.value != null
-              ? bkgText(
-                  child: Column(
+    final isLandscape =
+        MediaQuery.of(context).orientation == Orientation.landscape;
+
+    if (!isLandscape) {
+      // حالت عمودی (همان ساختار فعلی)
+      return Positioned(
+        top: 70,
+        left: 35,
+        right: 35,
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                bkgText(
+                  horizontal: 4,
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
-                      Text(
-                        'حکم ',
-                        style: TextStyle(
-                            fontWeight: FontWeight.bold, fontSize: 14),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: [
+                          Obx(() => Text('شمــا: ست: '
+                              '${controller.teamSets['team1']?.value}  |  دست: ${controller.teamScores['team1']?.value}')),
+                        ],
                       ),
-                      InkWell(
-                        onTap: () => _showPlayedCardsDialog(context),
-                        child: Image.asset(
-                          'assets/drawables/${_getSuitImageName(controller.selectedHokm.value!)}',
-                          width: 28,
+                      SizedBox(width: 4),
+                      Obx(() => Row(
+                            children: List.generate(7, (i) {
+                              if (i < controller.team1WonHands.length) {
+                                return Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 1.5),
+                                  child: isColor
+                                      ? Container(
+                                          width: 14,
+                                          height: 21,
+                                          decoration: BoxDecoration(
+                                            color: settingsController
+                                                .cardBackColors[idx],
+                                            borderRadius:
+                                                BorderRadius.circular(3),
+                                            border: Border.all(
+                                              color: Colors.grey,
+                                              width: 1,
+                                            ),
+                                          ),
+                                        )
+                                      : Image.asset(
+                                          settingsController.cardBackImages[
+                                              idx -
+                                                  settingsController
+                                                      .cardBackColors.length],
+                                          width: 18,
+                                          height: 21,
+                                        ),
+                                );
+                              } else {
+                                return Padding(
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 1.5),
+                                    child: Container(
+                                      width: 14,
+                                      height: 21,
+                                      decoration: BoxDecoration(
+                                        borderRadius: BorderRadius.circular(3),
+                                        border: Border.all(
+                                          color: Colors.grey,
+                                          width: 1,
+                                        ),
+                                      ),
+                                    ));
+                              }
+                            }),
+                          )),
+                    ],
+                  ),
+                ),
+                SizedBox(height: 10),
+                bkgText(
+                  horizontal: 4,
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: [
+                          Obx(() => Text('حریف: ست: '
+                              '${controller.teamSets['team2']?.value}  |  دست: ${controller.teamScores['team2']?.value}')),
+                        ],
+                      ),
+                      SizedBox(width: 4),
+                      Obx(() => Row(
+                            children: List.generate(7, (i) {
+                              if (i < controller.team2WonHands.length) {
+                                return Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 1.5),
+                                  child: isColor
+                                      ? Container(
+                                          width: 14,
+                                          height: 21,
+                                          decoration: BoxDecoration(
+                                            color: settingsController
+                                                .cardBackColors[idx],
+                                            borderRadius:
+                                                BorderRadius.circular(3),
+                                            border: Border.all(
+                                              color: Colors.black,
+                                              width: 1,
+                                            ),
+                                          ),
+                                        )
+                                      : Image.asset(
+                                          settingsController.cardBackImages[
+                                              idx -
+                                                  settingsController
+                                                      .cardBackColors.length],
+                                          width: 18,
+                                          height: 21,
+                                        ),
+                                );
+                              } else {
+                                return Padding(
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 1.5),
+                                    child: Container(
+                                      width: 14,
+                                      height: 21,
+                                      decoration: BoxDecoration(
+                                        borderRadius: BorderRadius.circular(3),
+                                        border: Border.all(
+                                          color: Colors.grey,
+                                          width: 1,
+                                        ),
+                                      ),
+                                    ));
+                              }
+                            }),
+                          )),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            Obx(() => controller.selectedHokm.value != null
+                ? bkgText(
+                    horizontal: 9,
+                    child: Column(
+                      children: [
+                        Text(
+                          'حکم ',
+                          style: TextStyle(
+                              fontWeight: FontWeight.bold, fontSize: 14),
+                        ),
+                        SizedBox(
+                          height: 4,
+                        ),
+                        InkWell(
+                          onTap: () => _showPlayedCardsDialog(context),
+                          child: Image.asset(
+                            'assets/drawables/${_getSuitImageName(controller.selectedHokm.value!)}',
+                            width: 30,
+                          ),
+                        ),
+                      ],
+                    ),
+                  )
+                : SizedBox()),
+          ],
+        ),
+      );
+    } else {
+      // حالت افقی (ساختار جدید)
+      return Positioned(
+        top: 55,
+        left: 40,
+        right: 40,
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          crossAxisAlignment: CrossAxisAlignment.end,
+          children: [
+            // شما => ست و دست
+
+            bkgText(
+              child: Column(
+                children: [
+                  Obx(() => Text('شما = ست: '
+                      '${controller.teamSets['team1']?.value} | دست: ${controller.teamScores['team1']?.value}')),
+                  SizedBox(height: 5),
+                  Obx(() => Row(
+                        children: List.generate(7, (i) {
+                          if (i < controller.team1WonHands.length) {
+                            return Padding(
+                              padding:
+                                  const EdgeInsets.symmetric(horizontal: 3),
+                              child: isColor
+                                  ? Container(
+                                      width: 14,
+                                      height: 21,
+                                      decoration: BoxDecoration(
+                                        color: settingsController
+                                            .cardBackColors[idx],
+                                        borderRadius: BorderRadius.circular(3),
+                                        border: Border.all(
+                                          color: Colors.grey,
+                                          width: 1,
+                                        ),
+                                      ),
+                                    )
+                                  : Image.asset(
+                                      settingsController.cardBackImages[idx -
+                                          settingsController
+                                              .cardBackColors.length],
+                                      width: 18,
+                                      height: 21,
+                                    ),
+                            );
+                          } else {
+                            return Padding(
+                                padding:
+                                    const EdgeInsets.symmetric(horizontal: 3),
+                                child: Container(
+                                  width: 14,
+                                  height: 21,
+                                  decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(3),
+                                    border: Border.all(
+                                      color: Colors.grey,
+                                      width: 1,
+                                    ),
+                                  ),
+                                ));
+                          }
+                        }),
+                      )),
+                ],
+              ),
+            ),
+            // حکم
+            Obx(() => controller.selectedHokm.value != null
+                ? Column(
+                    children: [
+                      SizedBox(height: 18),
+                      bkgText(
+                        vertical: 4,
+                        child: Column(
+                          children: [
+                            Text(
+                              'حکم',
+                              style: TextStyle(
+                                  fontWeight: FontWeight.bold, fontSize: 14),
+                            ),
+                            InkWell(
+                              onTap: () => _showPlayedCardsDialog(context),
+                              child: Image.asset(
+                                'assets/drawables/${_getSuitImageName(controller.selectedHokm.value!)}',
+                                width: 28,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                     ],
-                  ),
-                )
-              : SizedBox()),
-        ],
-      ),
-    );
+                  )
+                : SizedBox()),
+            // حریف => ست و دست
+
+            bkgText(
+              child: Column(
+                children: [
+                  Obx(() => Text('حریف = ست: '
+                      '${controller.teamSets['team2']?.value} | دست: ${controller.teamScores['team2']?.value}')),
+                  SizedBox(height: 5),
+                  Obx(() => Row(
+                        children: List.generate(7, (i) {
+                          if (i < controller.team2WonHands.length) {
+                            return Padding(
+                              padding:
+                                  const EdgeInsets.symmetric(horizontal: 3),
+                              child: isColor
+                                  ? Container(
+                                      width: 14,
+                                      height: 21,
+                                      decoration: BoxDecoration(
+                                        color: settingsController
+                                            .cardBackColors[idx],
+                                        borderRadius: BorderRadius.circular(3),
+                                        border: Border.all(
+                                          color: Colors.black,
+                                          width: 1,
+                                        ),
+                                      ),
+                                    )
+                                  : Image.asset(
+                                      settingsController.cardBackImages[idx -
+                                          settingsController
+                                              .cardBackColors.length],
+                                      width: 18,
+                                      height: 21,
+                                    ),
+                            );
+                          } else {
+                            return Padding(
+                                padding:
+                                    const EdgeInsets.symmetric(horizontal: 3),
+                                child: Container(
+                                  width: 14,
+                                  height: 21,
+                                  decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(3),
+                                    border: Border.all(
+                                      color: Colors.grey,
+                                      width: 1,
+                                    ),
+                                  ),
+                                ));
+                          }
+                        }),
+                      )),
+                ],
+              ),
+            )
+          ],
+        ),
+      );
+    }
   }
 
   /// ساختار پس‌زمینه متنی برای نمایش امتیازات و حکم.
-  Container bkgText({required Widget child}) {
+  Container bkgText(
+      {required Widget child,
+      double vertical = 8.0,
+      double horizontal = 16.0}) {
     return Container(
-        padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        padding:
+            EdgeInsets.symmetric(horizontal: horizontal, vertical: vertical),
         decoration: BoxDecoration(
           color: Colors.grey.shade700.withOpacity(0.5),
           borderRadius: BorderRadius.circular(12),
@@ -279,9 +484,16 @@ class GameScreen extends StatelessWidget {
       child: Center(
         child: Obx(
           () => controller.showStartButton.value
-              ? ElevatedButton(
-                  onPressed: controller.startGame,
-                  child: Text('انتخاب حاکم'),
+              ? SizedBox(
+                  height: 60,
+                  width: 150,
+                  child: ElevatedButton(
+                    onPressed: controller.startGame,
+                    child: Text(
+                      'شروع بازی و\nانتخاب حاکم',
+                      style: TextStyle(fontSize: 18),
+                    ),
+                  ),
                 )
               : SizedBox(
                   height: 150,
@@ -338,7 +550,7 @@ class GameScreen extends StatelessWidget {
     return Builder(
         builder: (context) => Obx(
               () => Positioned(
-                bottom: controller.cardPositions['bottom']?.value ?? 0,
+                bottom: controller.cardPositions['bottom']?.value ?? 4,
                 left: 0,
                 right: 0,
                 child: Column(
@@ -350,12 +562,12 @@ class GameScreen extends StatelessWidget {
                           // Obx(() =>
                           controller.playerCards['bottom']?.isNotEmpty ?? false
                               ? SizedBox(
-                                  height: 88,
+                                  height: 98,
                                   width: controller
                                               .playerCards['bottom']!.length *
                                           (MediaQuery.of(context).size.width *
                                               0.0526) +
-                                      30,
+                                      52,
                                   // width: MediaQuery.of(context).size.width * 0.7,
                                   child: Stack(
                                       // alignment: Alignment.center,
@@ -537,7 +749,7 @@ class GameScreen extends StatelessWidget {
         builder: (context) => Obx(
               () => Positioned(
                 top: (controller.cardPositions['top']?.value ?? 1),
-                left: 0,
+                left: 6,
                 right: 0,
                 child: Column(
                   children: [
@@ -566,13 +778,15 @@ class GameScreen extends StatelessWidget {
                             : SizedBox(),
                       ),
                     ),
-                    SizedBox(height: 6),
+                    SizedBox(height: 2),
                     bkgText(
+                      // vertical: 4,
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           Text(controller.getPlayerName('top')),
+                          SizedBox(width: 5),
                           if (controller.hokmPlayer.value == 'top')
                             ...tajAnCir()
                         ],
@@ -676,7 +890,7 @@ class GameScreen extends StatelessWidget {
         return AlertDialog(
           title: Text('کارت‌های بازی‌شده'),
           content: SizedBox(
-            width: 350,
+            width: 450,
             child: SingleChildScrollView(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -695,9 +909,13 @@ class GameScreen extends StatelessWidget {
                               .map((entry) => Padding(
                                     padding: const EdgeInsets.symmetric(
                                         horizontal: 2.0),
-                                    child: CardWidget(
-                                        card: entry.value,
-                                        borderColor: Colors.red),
+                                    child: SizedBox(
+                                      width: 40,
+                                      // height: 30,
+                                      child: CardWidget(
+                                          card: entry.value,
+                                          borderColor: Colors.red),
+                                    ),
                                   )),
                         ],
                       ),
@@ -709,7 +927,7 @@ class GameScreen extends StatelessWidget {
             ),
           ),
           actions: [
-            TextButton(
+            ElevatedButton(
               onPressed: () => Navigator.of(context).pop(),
               child: Text('بستن'),
             ),

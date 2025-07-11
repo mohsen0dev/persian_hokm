@@ -149,7 +149,7 @@ class GameController extends GetxController {
     cardPositions.value = {
       'left': (-50.0).obs,
       'right': (-50.0).obs,
-      'top': (-60.0).obs,
+      'top': (-70.0).obs,
     };
     if (game.players.isEmpty) {
       final aiLevel = Get.find<SettingsController>().aiLevel.value;
@@ -256,7 +256,7 @@ class GameController extends GetxController {
       cardPositions.value = {
         'left': (-50.0).obs,
         'right': (-50.0).obs,
-        'top': (-60.0).obs,
+        'top': (-70.0).obs,
       };
       game.hakem = _stringToDirection(hokmPlayer.value);
       currentHakemDir = game.hakem;
