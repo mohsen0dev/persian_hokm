@@ -206,12 +206,14 @@ class PlayerAI extends Player {
 //! هوش مصنوعی نفر اول
   GameCard firstCard(Suit hokm, List<List<GameCard>> tableHistory,
       List<GameCard> table, List<Team> teams, Direction starterDirection) {
+    print('---------------------------------------------------\n . \n');
     // اگر یار در دست قبلی یک خال خاص بازی کرده و کارت از آن خال داری، ضعیف‌ترین کارت همان خال را بازی کن
     if (lastPartnerSuit != null) {
       final mySuitCards = hand.where((c) => c.suit == lastPartnerSuit).toList();
       if (mySuitCards.isNotEmpty) {
         print(
             '[$name][$direction] (اولویت ویژه): چون یار آخرین بار این خال را بازی کرده، ضعیف‌ترین کارت همان خال بازی می‌شود');
+        lastPartnerSuit = null;
         return weakestCard(mySuitCards);
       }
     }
@@ -498,7 +500,7 @@ class PlayerAI extends Player {
           .toList();
       // اگر هیچ کارت قوی‌تری نسبت به کارت یار در کارت‌های باقی‌مانده نبود، پس یار واقعاً برنده است
       partnerIsTrulyWinning =
-          remainingSuitCards.every((c) => c.rank.index < firstCard.rank.index);
+          remainingSuitCards.every((c) => c.rank.index > firstCard.rank.index);
       print('[DEBUG][thirdCard] partnerIsTrulyWinning: '
           '\u001b[33m$partnerIsTrulyWinning\u001b[0m, '
           'firstCard: $firstCard, remainingSuitCards: $remainingSuitCards, hand: $hand');

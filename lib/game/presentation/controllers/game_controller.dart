@@ -148,8 +148,8 @@ class GameController extends GetxController {
     isThirdDistributionDone.value = false;
     cardPositions.value = {
       'left': (-50.0).obs,
-      'right': (-100.0).obs,
-      'top': (-75.0).obs,
+      'right': (-90.0).obs,
+      'top': (-70.0).obs,
     };
     if (game.players.isEmpty) {
       final aiLevel = Get.find<SettingsController>().aiLevel.value;
@@ -255,8 +255,8 @@ class GameController extends GetxController {
       game.deck = List.from(newDeck);
       cardPositions.value = {
         'left': (-50.0).obs,
-        'right': (-100.0).obs,
-        'top': (-75.0).obs,
+        'right': (-90.0).obs,
+        'top': (-70.0).obs,
       };
       game.hakem = _stringToDirection(hokmPlayer.value);
       currentHakemDir = game.hakem;
@@ -518,6 +518,13 @@ class GameController extends GetxController {
     teamScores['team2']?.value = 0;
     team1WonHands.clear();
     team2WonHands.clear();
+
+    // پاک کردن lastPartnerSuit برای همه بازیکنان در پایان ست
+    if (game.players.length == 4) {
+      for (final player in game.players) {
+        player.lastPartnerSuit = null;
+      }
+    }
 
     bool hakemTeamWon = (currentHakemDir == Direction.bottom ||
             currentHakemDir == Direction.top)
