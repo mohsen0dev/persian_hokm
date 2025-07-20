@@ -1,9 +1,9 @@
 /// خال کارت
 enum Suit {
-  hearts, // گشنیز
+  hearts, // دل
   diamonds, // خشت
-  clubs, // پیک
-  spades // دل
+  clubs, // گشنیز
+  spades // پیک
 }
 
 /// اکسنسیون خال کارت

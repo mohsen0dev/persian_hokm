@@ -65,13 +65,22 @@ class CardWidget extends StatelessWidget {
           color: borderColor,
           width: isSelectable ? 2 : 1,
         ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.2),
-            blurRadius: 2,
-            offset: const Offset(3, 3),
-          ),
-        ],
+        color: isSelectable ? const Color(0xFF232526).withOpacity(0.92) : null,
+        boxShadow: isSelectable
+            ? [
+                BoxShadow(
+                  color: borderColor.withOpacity(0.18),
+                  blurRadius: 12,
+                  offset: const Offset(0, 6),
+                ),
+              ]
+            : [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.2),
+                  blurRadius: 2,
+                  offset: const Offset(3, 3),
+                ),
+              ],
       ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(10),

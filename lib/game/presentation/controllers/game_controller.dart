@@ -1,18 +1,23 @@
 import 'dart:async';
 import 'dart:math';
 
-import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import 'package:persian_hokm/game/core/game_logic.dart';
 import 'package:persian_hokm/game/models/enums.dart';
 import 'package:persian_hokm/game/models/card.dart';
-import 'package:persian_hokm/game/models/player.dart';
-import 'package:persian_hokm/game/models/team.dart';
 import 'package:persian_hokm/game/presentation/pages/settings_screen.dart';
-import 'package:persian_hokm/game/presentation/widgets/animated_card.dart';
 import 'package:persian_hokm/game/presentation/widgets/played_animated_card.dart';
+import 'package:persian_hokm/game/core/sound_manager.dart';
+import 'package:persian_hokm/game/presentation/utils/ui_helper.dart';
+import 'package:persian_hokm/game/core/game_score_manager.dart';
+import 'package:persian_hokm/game/core/card_distributor.dart';
+import 'package:persian_hokm/game/core/player_team_manager.dart';
+import 'package:persian_hokm/game/core/game_state_manager.dart';
+import 'package:persian_hokm/game/core/card_manager.dart';
+import 'package:persian_hokm/game/core/turn_manager.dart';
+import 'package:persian_hokm/game/core/game_utils.dart';
 
 /// کنترلر اصلی بازی حکم
 class GameController extends GetxController {
@@ -32,7 +37,7 @@ class GameController extends GetxController {
     'top': <GameCard>[].obs,
     'left': <GameCard>[].obs,
   }.obs;
-  final hokmPlayer = ''.obs;
+  final Rxn<String> hokmPlayer = Rxn<String>();
   final isDistributing = false.obs;
   final selectedHokm = Rxn<Suit>();
   final showHokmDialog = false.obs;
@@ -58,25 +63,55 @@ class GameController extends GetxController {
   final team1WonHands = <int>[].obs;
   final team2WonHands = <int>[].obs;
   BuildContext get context => Get.context!;
-  final AudioPlayer _audioPlayer = AudioPlayer();
+  final SoundManager soundManager = SoundManager();
   Direction? currentHakemDir;
   bool isFirstGame = true;
   bool _isActive = true;
+  late final GameScoreManager scoreManager;
+  late final CardDistributor cardDistributor;
 
-  /// پخش صدای مورد نظر با نام داده شده
-  Future<void> playSound(String name) async {
-    try {
-      await _audioPlayer.stop();
-      await _audioPlayer.play(AssetSource('songs/$name'));
-    } catch (_) {}
-  }
+  // اضافه کردن واکنش به تغییر isBottomPlayerTurn
+  // GameController() {
+  //   ever(isBottomPlayerTurn, (bool turn) {
+  //     if (turn == true) {
+  //       print('بازیکن پاییین نوبتش استتتتتتتتتتتتتتتتت');
+  //       update();
+  //     }
+  //   });
+  // }
 
-  /// مقداردهی اولیه کنترلر و بازی
+  /// مقداردهی اولیه کنترلر و بازی (اکنون با GameStateManager)
   @override
   void onInit() {
     super.onInit();
     game = GameLogic();
-    _initializeCards();
+    GameStateManager.initializeGameState(
+      playerCards: playerCards,
+      teamScores: teamScores,
+      teamSets: teamSets,
+      hokmPlayer: hokmPlayer,
+      showCards: showCards,
+      showStartButton: showStartButton,
+      showTajAndCircle: showTajAndCircle,
+      selectedHokm: selectedHokm,
+      showHokmDialog: showHokmDialog,
+      isFirstDistributionDone: isFirstDistributionDone,
+      isSecondDistributionDone: isSecondDistributionDone,
+      isThirdDistributionDone: isThirdDistributionDone,
+      cardPositions: cardPositions,
+      cards: cards,
+      deck: game.deck,
+      hands: game.hands,
+      animatedPlayedCards: animatedPlayedCards,
+      firstSuit: firstSuit,
+    );
+    scoreManager = GameScoreManager(
+      teamScores: teamScores,
+      teamSets: teamSets,
+      team1WonHands: team1WonHands,
+      team2WonHands: team2WonHands,
+    );
+    cardDistributor = CardDistributor(soundManager: soundManager);
   }
 
   /// مقداردهی اولیه کارت‌ها و وضعیت بازی
@@ -108,7 +143,7 @@ class GameController extends GetxController {
 
   /// شروع بازی و تعیین حاکم
   void startGame() async {
-    snackMessage(title: 'انتخاب حاکم');
+    UIHelper.showSnackBar(context, 'انتخاب حاکم');
     showStartButton.value = false;
     showCards.value = true;
     isGameStarted.value = false;
@@ -153,24 +188,12 @@ class GameController extends GetxController {
     };
     if (game.players.isEmpty) {
       final aiLevel = Get.find<SettingsController>().aiLevel.value;
-      game.players = [
-        PlayerHuman(
-            'شما', game.hands[Direction.bottom.index], Direction.bottom),
-        PlayerAI('حریف1', Direction.right, game.hands[Direction.right.index],
-            aiLevel: aiLevel, isPartner: false),
-        PlayerAI('یار شما', Direction.top, game.hands[Direction.top.index],
-            aiLevel: aiLevel, isPartner: true),
-        PlayerAI('حریف2', Direction.left, game.hands[Direction.left.index],
-            aiLevel: aiLevel, isPartner: false),
-      ];
-      game.teams = [
-        Team(game.players[0], game.players[2]),
-        Team(game.players[1], game.players[3]),
-      ];
-      game.players[0].team = game.teams[0];
-      game.players[2].team = game.teams[0];
-      game.players[1].team = game.teams[1];
-      game.players[3].team = game.teams[1];
+      final result = PlayerTeamManager.createPlayersAndTeams(
+        aiLevel: aiLevel,
+        hands: game.hands,
+      );
+      game.players = result['players'];
+      game.teams = result['teams'];
     }
     await _dealCardsStepByStep(5);
     if (hakemDir == Direction.bottom) {
@@ -181,7 +204,7 @@ class GameController extends GetxController {
     }
   }
 
-  /// توزیع کارت برای تعیین حاکم
+  /// توزیع کارت برای تعیین حاکم (اکنون با CardDistributor)
   Future<void> _distributeCardsForHakem() async {
     for (var h in game.hands) {
       h.clear();
@@ -205,44 +228,20 @@ class GameController extends GetxController {
     cardPositions['left']?.value = 0.0;
     cardPositions['right']?.value = 0.0;
     cardPositions['top']?.value = 0.0;
-    int currentCardIndex = 0;
-    final distributionOrder = ['bottom', 'right', 'top', 'left'];
-    int currentPlayerIndex = 0;
-    bool hakemFound = false;
-    while (currentCardIndex < cards.length) {
-      if (!_isActive) return;
-      final currentCard = cards[currentCardIndex];
-      final currentPlayer = distributionOrder[currentPlayerIndex];
-      playSound('pakhsh.mp3');
-      final animData =
-          AnimatedCard(card: currentCard, targetPosition: currentPlayer);
-      animatedCards.add(animData);
-      update();
-      await Future.delayed(const Duration(milliseconds: 350));
-      if (!_isActive) return;
-      playerCards[currentPlayer]?.add(currentCard);
-      animatedCards.removeWhere((a) => a.key == animData.key);
-      cards.removeAt(currentCardIndex);
-      update();
-      await Future.delayed(const Duration(milliseconds: 60));
-      if (!_isActive) return;
-      if (currentCard.rank == Rank.ace) {
-        hokmPlayer.value = currentPlayer;
+    String? foundHakem = await cardDistributor.distributeCardsForHakem(
+      cards: cards,
+      playerCards: playerCards,
+      animatedCards: animatedCards,
+      isActive: () => _isActive,
+      update: update,
+      onAceFound: () async {
         showTajAndCircle.value = true;
-        Get.snackbar(
-          'حاکم مشخص شد!',
-          '${getPlayerName(currentPlayer)} حاکم شد',
-          snackPosition: SnackPosition.TOP,
-          backgroundColor: Colors.green,
-          colorText: Colors.white,
-          duration: const Duration(seconds: 2),
-        );
-        hakemFound = true;
-        break;
-      }
-      currentPlayerIndex = (currentPlayerIndex + 1) % 4;
-    }
-    if (hakemFound) {
+        UIHelper.showSnackBar(
+            context, '${getPlayerName(hokmPlayer.value!)} حاکم شد');
+      },
+    );
+    if (foundHakem != null) {
+      hokmPlayer.value = foundHakem;
       await Future.delayed(const Duration(seconds: 2));
       if (!_isActive) return;
       for (var list in playerCards.values) {
@@ -258,29 +257,17 @@ class GameController extends GetxController {
         'right': (-90.0).obs,
         'top': (-70.0).obs,
       };
-      game.hakem = _stringToDirection(hokmPlayer.value);
+      game.hakem = _stringToDirection(hokmPlayer.value ?? '');
       currentHakemDir = game.hakem;
       await _dealCardsStepByStep(5);
       if (game.players.isEmpty) {
         final aiLevel = Get.find<SettingsController>().aiLevel.value;
-        game.players = [
-          PlayerHuman(
-              'شما', game.hands[Direction.bottom.index], Direction.bottom),
-          PlayerAI('حریف1', Direction.right, game.hands[Direction.right.index],
-              aiLevel: aiLevel, isPartner: false),
-          PlayerAI('یار شما', Direction.top, game.hands[Direction.top.index],
-              aiLevel: aiLevel, isPartner: true),
-          PlayerAI('حریف2', Direction.left, game.hands[Direction.left.index],
-              aiLevel: aiLevel, isPartner: false),
-        ];
-        game.teams = [
-          Team(game.players[0], game.players[2]),
-          Team(game.players[1], game.players[3]),
-        ];
-        game.players[0].team = game.teams[0];
-        game.players[2].team = game.teams[0];
-        game.players[1].team = game.teams[1];
-        game.players[3].team = game.teams[1];
+        final result = PlayerTeamManager.createPlayersAndTeams(
+          aiLevel: aiLevel,
+          hands: game.hands,
+        );
+        game.players = result['players'];
+        game.teams = result['teams'];
       }
       if (game.hakem == Direction.bottom) {
         showHokmDialog.value = true;
@@ -291,21 +278,13 @@ class GameController extends GetxController {
     }
   }
 
-  /// همگام‌سازی دست بازیکنان با رابط کاربری
+  /// همگام‌سازی دست بازیکنان با رابط کاربری (اکنون با CardManager)
   void _syncHandsWithUI() {
-    for (var pos in ['bottom', 'right', 'top', 'left']) {
-      playerCards[pos]?.clear();
-    }
-    for (int i = 0; i < 4; i++) {
-      final dir = Direction.values[i];
-      final pos = _directionToString(dir);
-      playerCards[pos]?.addAll(game.hands[i]);
-      if (game.players.length == 4) {
-        game.players[i].hand.clear();
-        game.players[i].hand.addAll(game.hands[i]);
-      }
-    }
-    _sortBottomPlayerCards();
+    CardManager.syncHandsWithUI(
+      playerCards: playerCards,
+      hands: game.hands,
+      players: game.players,
+    );
   }
 
   /// دریافت ترتیب توزیع کارت از یک جهت خاص
@@ -313,61 +292,34 @@ class GameController extends GetxController {
     return List.generate(4, (i) => Direction.values[(start.index + i) % 4]);
   }
 
-  /// توزیع مرحله‌ای کارت‌ها به بازیکنان
+  /// توزیع مرحله‌ای کارت‌ها به بازیکنان (اکنون با CardDistributor)
   Future<void> _dealCardsStepByStep(int numCards) async {
     final order = _getDistributionOrder(game.hakem);
-    for (final dir in order) {
-      for (int i = 0; i < numCards; i++) {
-        final card = game.deck.removeAt(0);
-        playSound('pakhsh.mp3');
-        final animData =
-            AnimatedCard(card: card, targetPosition: _directionToString(dir));
-        animatedCards.add(animData);
-        update();
-        await Future.delayed(const Duration(milliseconds: 350));
-        game.hands[dir.index].add(card);
-        card.player = game.players.isNotEmpty ? game.players[dir.index] : null;
-        playerCards[_directionToString(dir)]?.add(card);
-        cards.removeAt(0);
-        animatedCards.removeWhere((a) => a.key == animData.key);
-        update();
-        await Future.delayed(const Duration(milliseconds: 60));
-      }
-    }
+    await cardDistributor.dealCardsStepByStep(
+      numCards: numCards,
+      order: order,
+      deck: game.deck,
+      hands: game.hands,
+      players: game.players,
+      playerCards: playerCards,
+      cards: cards,
+      animatedCards: animatedCards,
+      update: update,
+    );
     _syncHandsWithUI();
   }
 
   /// تبدیل رشته موقعیت به جهت بازیکن
   Direction _stringToDirection(String pos) {
-    switch (pos) {
-      case 'bottom':
-        return Direction.bottom;
-      case 'right':
-        return Direction.right;
-      case 'top':
-        return Direction.top;
-      case 'left':
-        return Direction.left;
-      default:
-        return Direction.bottom;
-    }
+    return GameUtils.stringToDirection(pos);
   }
 
   /// تبدیل جهت بازیکن به رشته موقعیت
   String _directionToString(Direction dir) {
-    switch (dir) {
-      case Direction.bottom:
-        return 'bottom';
-      case Direction.right:
-        return 'right';
-      case Direction.top:
-        return 'top';
-      case Direction.left:
-        return 'left';
-    }
+    return GameUtils.directionToString(dir);
   }
 
-  /// انتخاب حکم توسط بازیکن یا هوش مصنوعی
+  /// انتخاب حکم توسط بازیکن یا هوش مصنوعی (کوچک‌سازی شده)
   void selectHokm(Suit suit) async {
     selectedHokm.value = suit;
     showHokmDialog.value = false;
@@ -377,8 +329,8 @@ class GameController extends GetxController {
     await Future.delayed(const Duration(milliseconds: 300));
     await _dealCardsStepByStep(4);
     _sortBottomPlayerCards();
-    currentPlayer.value = hokmPlayer.value;
-    isBottomPlayerTurn.value = hokmPlayer.value == 'bottom';
+    currentPlayer.value = hokmPlayer.value ?? '';
+    isBottomPlayerTurn.value = (hokmPlayer.value ?? '') == 'bottom';
     if (game.hakem != Direction.bottom) {
       Future.delayed(const Duration(milliseconds: 1000), () {
         _playComputerCard();
@@ -386,82 +338,34 @@ class GameController extends GetxController {
     }
   }
 
-  /// مرتب‌سازی کارت‌های بازیکن پایین
+  /// مرتب‌سازی کارت‌های بازیکن پایین (اکنون با CardManager)
   void _sortBottomPlayerCards() {
-    if (playerCards['bottom']?.isNotEmpty ?? false) {
-      playerCards['bottom']?.sort((a, b) {
-        final suitOrder = {
-          Suit.hearts: 0,
-          Suit.clubs: 1,
-          Suit.diamonds: 2,
-          Suit.spades: 3,
-        };
-        if (a.suit != b.suit) {
-          return suitOrder[a.suit]!.compareTo(suitOrder[b.suit]!);
-        }
-        return a.rank.index.compareTo(b.rank.index);
-      });
-    }
+    CardManager.sortBottomPlayerCards(playerCards: playerCards);
   }
 
-  /// بازی کردن یک کارت توسط بازیکن یا هوش مصنوعی
-  void playCard(GameCard card) {
-    if (!canPlayCard(card)) return;
-    final dir = Direction.values
-        .firstWhere((d) => _directionToString(d) == currentPlayer.value);
-    playerCards[currentPlayer.value]
-        ?.removeWhere((c) => c.suit == card.suit && c.rank == card.rank);
-    game.hands[dir.index]
-        .removeWhere((c) => c.suit == card.suit && c.rank == card.rank);
-    if (game.players.length == 4) {
-      game.players[dir.index].hand
-          .removeWhere((c) => c.suit == card.suit && c.rank == card.rank);
-    }
-    bool isCut = false;
+  /// حذف کارت از دست بازیکن (اکنون با CardManager)
+  void _removeCardFromPlayer(GameCard card, Direction dir) {
+    CardManager.removeCardFromPlayer(
+      card: card,
+      currentPlayer: currentPlayer.value,
+      playerCards: playerCards,
+      hands: game.hands,
+      players: game.players,
+    );
+  }
+
+  /// بررسی برش کارت (متد کمکی)
+  bool _isCardCut(GameCard card) {
     if (game.table.isNotEmpty) {
       final firstSuit = game.table.first.suit;
       if (card.suit == game.hokm && card.suit != firstSuit) {
-        isCut = true;
+        return true;
       }
     }
-    if (isCut) {
-      playSound('boresh.mp3');
-    } else {
-      playSound('select.wav');
-    }
-    final animData = PlayedAnimatedCard(
-      card: card,
-      fromPosition: currentPlayer.value,
-      isCut: isCut,
-    );
-    animatedPlayedCards.add(animData);
-    update();
-    final playedBy = currentPlayer.value;
-    Future.delayed(const Duration(milliseconds: 350), () {
-      tableCards[playedBy] = card;
-      animatedPlayedCards.removeWhere((a) => a.key == animData.key);
-      update();
-    });
-    if (game.table.isEmpty) {
-      firstSuit.value = card.suit;
-    }
-    game.playCard(card, dir);
-    _syncHandsWithUI();
-    if (game.table.isEmpty) {
-      final winner = _directionToString(game.tableDir);
-      _endHandUI(winner);
-    } else {
-      currentPlayer.value = _directionToString(game.tableDir);
-      isBottomPlayerTurn.value = currentPlayer.value == 'bottom';
-      if (currentPlayer.value != 'bottom') {
-        Future.delayed(const Duration(milliseconds: 1000), () {
-          _playComputerCard();
-        });
-      }
-    }
+    return false;
   }
 
-  /// بازی خودکار کارت توسط هوش مصنوعی
+  /// بازی خودکار کارت توسط هوش مصنوعی (کوچک‌سازی شده)
   void _playComputerCard() {
     if (currentPlayer.value == 'bottom') return;
     final dir = Direction.values
@@ -479,26 +383,25 @@ class GameController extends GetxController {
 
   /// مدیریت پایان یک دست و بروزرسانی امتیازات
   Future<void> _endHandUI(String winner) async {
-    await Future.delayed(const Duration(seconds: 1));
-    if (winner == 'bottom' || winner == 'top') {
-      teamScores['team1']?.value++;
-      team1WonHands.add(1);
-    } else {
-      teamScores['team2']?.value++;
-      team2WonHands.add(1);
-    }
-    if (teamScores['team1']?.value == 7 || teamScores['team2']?.value == 7) {
-      await Future.delayed(const Duration(seconds: 1));
+    await Future.delayed(const Duration(milliseconds: 1000));
+    tableCards.clear();
+    firstSuit.value = null;
+    // firstSuit.refresh();
+    currentPlayer.value = winner;
+    // currentPlayer.refresh();
+    isBottomPlayerTurn.value = winner == 'bottom';
+    // isBottomPlayerTurn.refresh();
+    // update();
+    await Future.delayed(const Duration(milliseconds: 1000));
+    scoreManager.increaseHandScore(winner);
+    if (scoreManager.isSetFinished()) {
+      await Future.delayed(const Duration(milliseconds: 1000));
       _endSet();
       return;
     }
-    await Future.delayed(const Duration(seconds: 1));
-    tableCards.clear();
-    firstSuit.value = null;
-    currentPlayer.value = winner;
-    isBottomPlayerTurn.value = winner == 'bottom';
+    await Future.delayed(const Duration(milliseconds: 1000));
     if (winner != 'bottom') {
-      Future.delayed(const Duration(milliseconds: 1000), () {
+      Future.delayed(const Duration(milliseconds: 300), () {
         _playComputerCard();
       });
     }
@@ -506,26 +409,13 @@ class GameController extends GetxController {
 
   /// مدیریت پایان یک ست و شروع ست جدید
   void _endSet() {
-    String winningTeam;
-    if (teamScores['team1']?.value == 7) {
-      teamSets['team1']?.value++;
-      winningTeam = 'team1';
-    } else {
-      teamSets['team2']?.value++;
-      winningTeam = 'team2';
-    }
-    teamScores['team1']?.value = 0;
-    teamScores['team2']?.value = 0;
-    team1WonHands.clear();
-    team2WonHands.clear();
-
+    String winningTeam = scoreManager.finishSet();
     // پاک کردن lastPartnerSuit برای همه بازیکنان در پایان ست
     if (game.players.length == 4) {
       for (final player in game.players) {
         player.lastPartnerSuit = null;
       }
     }
-
     bool hakemTeamWon = (currentHakemDir == Direction.bottom ||
             currentHakemDir == Direction.top)
         ? winningTeam == 'team1'
@@ -535,133 +425,56 @@ class GameController extends GetxController {
     }
     game.hakem = currentHakemDir!;
     hokmPlayer.value = _directionToString(currentHakemDir!);
-
-    if (teamSets['team1']?.value == 7 || teamSets['team2']?.value == 7) {
+    if (scoreManager.isGameFinished()) {
       _endGame();
       return;
     }
-    int secondsLeft = 3;
-    Timer? timer;
-
-    Get.dialog(
-      StatefulBuilder(
-        builder: (context, setState) {
-          timer ??= Timer.periodic(Duration(seconds: 1), (t) {
-            if (secondsLeft > 1) {
-              setState(() => secondsLeft--);
-            } else {
-              t.cancel();
-              Get.back();
-              _initializeCards();
-              startGame();
-            }
-          });
-          return AlertDialog(
-            title: Text('ست جدید'),
-            content: Text(winningTeam == 'team1'
-                ? 'شما و یار یک ست بردید!'
-                : 'حریفان یک ست بردند!'),
-            actions: [
-              TextButton(
-                onPressed: () {
-                  timer?.cancel();
-                  Get.back();
-                  _initializeCards();
-                  startGame();
-                },
-                child: Text('ادامه ($secondsLeft)'),
-              ),
-            ],
-          );
-        },
-      ),
-      barrierDismissible: false,
+    UIHelper.showEndSetDialog(
+      context,
+      winningTeam == 'team1'
+          ? 'شما و یار این ست را بردید!'
+          : 'حریفان این ست را بردند!',
+      () {
+        _initializeCards();
+        startGame();
+      },
     );
   }
 
   /// مدیریت پایان کامل بازی و نمایش برنده
   void _endGame() {
-    final winningTeam = teamSets['team1']?.value == 7 ? 'team1' : 'team2';
+    final winningTeam = scoreManager.getFinalWinner();
     final winningTeamName = winningTeam == 'team1' ? 'شما ' : 'حریف ';
-    Get.dialog(
-      AlertDialog(
-        title: Text('پایان بازی'),
-        content: Text('$winningTeamName برنده نهایی شدند!'),
-        actions: [
-          TextButton(
-            onPressed: () {
-              Get.back();
-              Get.back();
-            },
-            child: Text('بستن'),
-          ),
-        ],
-      ),
-      barrierDismissible: false,
-    );
+    UIHelper.showEndGameDialog(context, '$winningTeamName برنده نهایی شدند!');
   }
 
-  /// بررسی امکان بازی کردن کارت توسط بازیکن
+  /// بررسی امکان بازی کردن کارت توسط بازیکن (اکنون با TurnManager)
   bool canPlayCard(GameCard card) {
-    if (!isBottomPlayerTurn.value && currentPlayer.value != 'bottom') {
-      return true;
-    }
-    if (!isBottomPlayerTurn.value) {
-      snackMessage(title: 'نوبت شما نیست');
-      return false;
-    }
-    if (tableCards.isEmpty) {
-      return true;
-    }
-    if (card.suit != firstSuit.value) {
-      final hasFirstSuitCard =
-          playerCards['bottom']!.any((c) => c.suit == firstSuit.value);
-      if (hasFirstSuitCard) {
-        snackMessage(title: 'کارت  نامعتبر !!!');
-        return false;
-      }
-    }
-    return true;
-  }
-
-  /// بررسی فعال بودن کارت برای بازی توسط بازیکن
-  bool isCardPlayable(GameCard card) {
-    if (!isBottomPlayerTurn.value) {
-      return false;
-    }
-    if (tableCards.isEmpty) {
-      return true;
-    }
-    if (card.suit != firstSuit.value) {
-      final hasFirstSuitCard =
-          playerCards['bottom']!.any((c) => c.suit == firstSuit.value);
-      if (hasFirstSuitCard) {
-        return false;
-      }
-    }
-    return true;
-  }
-
-  /// نمایش پیام کوتاه به کاربر
-  void snackMessage({required String title}) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        duration: Duration(milliseconds: 500),
-        width: 150,
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(10),
-        ),
-        elevation: 10,
-        content: Text(
-          textAlign: TextAlign.center,
-          title,
-          style: TextStyle(
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-      ),
+    return TurnManager.canPlayCard(
+      isBottomPlayerTurn: isBottomPlayerTurn.value,
+      currentPlayer: currentPlayer.value,
+      tableCards: tableCards,
+      firstSuit: firstSuit.value,
+      playerCards: playerCards,
+      showSnackBar: (msg) => UIHelper.showSnackBar(context, msg),
+      card: card,
     );
+  }
+
+  /// بررسی فعال بودن کارت برای بازی توسط بازیکن (اکنون با TurnManager)
+  bool isCardPlayable(GameCard card) {
+    return TurnManager.isCardPlayable(
+      isBottomPlayerTurn: isBottomPlayerTurn.value,
+      tableCards: tableCards,
+      firstSuit: firstSuit.value,
+      playerCards: playerCards,
+      card: card,
+    );
+  }
+
+  /// دریافت نام بازیکن بر اساس موقعیت (اکنون با GameUtils)
+  String getPlayerName(String position) {
+    return GameUtils.getPlayerName(position);
   }
 
   /// حذف کارت بالایی از لیست کارت‌ها
@@ -671,19 +484,52 @@ class GameController extends GetxController {
     }
   }
 
-  /// دریافت نام بازیکن بر اساس موقعیت
-  String getPlayerName(String position) {
-    switch (position) {
-      case 'bottom':
-        return 'شما';
-      case 'right':
-        return 'حریف1';
-      case 'top':
-        return 'یار شما';
-      case 'left':
-        return 'حریف2';
-      default:
-        return '';
+  /// بازی کردن یک کارت توسط بازیکن یا هوش مصنوعی (کوچک‌سازی شده)
+  void playCard(GameCard card) {
+    if (!canPlayCard(card)) return;
+    final dir = Direction.values
+        .firstWhere((d) => _directionToString(d) == currentPlayer.value);
+    CardManager.removeCardFromPlayer(
+      card: card,
+      currentPlayer: currentPlayer.value,
+      playerCards: playerCards,
+      hands: game.hands,
+      players: game.players,
+    );
+    if (game.table.isEmpty) {
+      firstSuit.value = card.suit;
+    }
+    game.playCard(card, dir);
+    _syncHandsWithUI();
+    // ریفرش کارت‌های پایین برای آپدیت صحیح UI
+    playerCards['bottom']?.refresh();
+    bool isCut = _isCardCut(card);
+    soundManager.play(isCut ? 'boresh.mp3' : 'select.wav');
+    final animData = PlayedAnimatedCard(
+      card: card,
+      fromPosition: currentPlayer.value,
+      isCut: isCut,
+    );
+    animatedPlayedCards.add(animData);
+    update();
+    final playedBy = currentPlayer.value;
+    Future.delayed(const Duration(milliseconds: 350), () {
+      tableCards[playedBy] = card;
+      animatedPlayedCards.removeWhere((a) => a.key == animData.key);
+      update();
+    });
+    if (game.table.isEmpty) {
+      final winner = _directionToString(game.tableDir);
+      _endHandUI(winner);
+    } else {
+      currentPlayer.value = _directionToString(game.tableDir);
+      isBottomPlayerTurn.value = currentPlayer.value == 'bottom';
+      update();
+      if (currentPlayer.value != 'bottom') {
+        Future.delayed(const Duration(milliseconds: 1000), () {
+          _playComputerCard();
+        });
+      }
     }
   }
 
@@ -691,8 +537,7 @@ class GameController extends GetxController {
   @override
   void onClose() {
     _isActive = false;
-    _audioPlayer.stop();
-    _audioPlayer.dispose();
+    soundManager.dispose();
     super.onClose();
   }
 }

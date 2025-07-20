@@ -76,7 +76,7 @@ class GameScreen extends StatelessWidget {
                 textTop(context),
                 cardCenter(isLandscape),
                 Obx(() => controller.showCards.value
-                    ? Container(child: cardBotton())
+                    ? Container(child: cardBotton(context))
                     : SizedBox()),
                 Obx(() => controller.showCards.value ? cardLeft() : SizedBox()),
                 Obx(() =>
@@ -155,7 +155,7 @@ class GameScreen extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.end,
                         children: [
                           Obx(() => Text('شمــا: ست: '
-                              '${controller.teamSets['team1']?.value}  |  دست: ${controller.teamScores['team1']?.value}')),
+                              '${controller.teamSets['team1']?.value}  |  دست:')),
                         ],
                       ),
                       SizedBox(width: 4),
@@ -230,7 +230,7 @@ class GameScreen extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.end,
                         children: [
                           Obx(() => Text('حریف: ست: '
-                              '${controller.teamSets['team2']?.value}  |  دست: ${controller.teamScores['team2']?.value}')),
+                              '${controller.teamSets['team2']?.value}  |  دست:')),
                         ],
                       ),
                       SizedBox(width: 4),
@@ -592,96 +592,81 @@ class GameScreen extends StatelessWidget {
   }
 
   /// نمایش کارت‌های بازیکن پایین (بازیکن انسانی).
-  Widget cardBotton() {
-    return Builder(
-        builder: (context) => Obx(
-              () => Positioned(
-                bottom: controller.cardPositions['bottom']?.value ?? 4,
-                left: 0,
-                right: 0,
-                child: Column(
-                  children: [
-                    if (controller.hokmPlayer.value == 'bottom') ...tajAnCir(),
-                    SizedBox(height: 6),
-                    Center(
-                      child:
-                          // Obx(() =>
-                          controller.playerCards['bottom']?.isNotEmpty ?? false
-                              ? SizedBox(
-                                  height: 98,
-                                  width: controller
-                                              .playerCards['bottom']!.length *
-                                          (MediaQuery.of(context).size.width *
-                                              0.0526) +
-                                      52,
-                                  // width: MediaQuery.of(context).size.width * 0.7,
-                                  child: Stack(
-                                      // alignment: Alignment.center,
-                                      children: [
-                                        for (int i = 0;
-                                            i <
-                                                controller
-                                                    .playerCards['bottom']!
-                                                    .length;
-                                            i++)
-                                          Positioned(
-                                            // right: 1,
-
-                                            left: i *
-                                                (MediaQuery.of(context)
-                                                        .size
-                                                        .width *
-                                                    0.0526),
-                                            child: GestureDetector(
-                                              onTap: () {
-                                                final card = controller
-                                                    .playerCards['bottom']![i];
-                                                if (controller
-                                                        .isBottomPlayerTurn
-                                                        .value &&
-                                                    controller
-                                                        .isCardPlayable(card)) {
-                                                  // این کارت را انتخاب کرده‌ایم
-                                                  controller.playCard(card);
-                                                  print(
-                                                      'isBottomPlayerTurn: ${controller.isBottomPlayerTurn.value} and card: $card');
-                                                }
-                                              },
-                                              child: Builder(
-                                                builder: (context) {
-                                                  final card =
-                                                      controller.playerCards[
-                                                          'bottom']![i];
-                                                  final canPlay = controller
-                                                      .isCardPlayable(card);
-                                                  return CardWidget(
-                                                    key: ValueKey(
-                                                        '${card.rankName}_${card.suit}'),
-                                                    card: card,
-                                                    isSelectable: controller
-                                                            .isBottomPlayerTurn
-                                                            .value &&
-                                                        canPlay,
-                                                    borderColor: controller
-                                                            .isBottomPlayerTurn
-                                                            .value
-                                                        ? (canPlay
-                                                            ? Colors.blue
-                                                            : Colors.red)
-                                                        : Colors.black26,
-                                                  );
-                                                },
-                                              ),
-                                            ),
-                                          ),
-                                      ]))
-                              : SizedBox(),
-                      // ),
-                    ),
-                  ],
-                ),
-              ),
-            ));
+  Widget cardBotton(BuildContext context) {
+    return Obx(() {
+      return Positioned(
+        bottom: controller.cardPositions['bottom']?.value ?? 4,
+        left: 0,
+        right: 0,
+        child: Column(
+          children: [
+            if (controller.hokmPlayer.value == 'bottom') ...tajAnCir(),
+            SizedBox(height: 6),
+            Center(
+              child: controller.playerCards['bottom']?.isNotEmpty ?? false
+                  ? SizedBox(
+                      height: 113,
+                      width: controller.playerCards['bottom']!.length *
+                              (MediaQuery.of(context).size.width * 0.0526) +
+                          52,
+                      child: Stack(
+                        alignment: AlignmentDirectional.center,
+                        children: [
+                          for (int i = 0;
+                              i < controller.playerCards['bottom']!.length;
+                              i++)
+                            Positioned(
+                              left: i *
+                                  (MediaQuery.of(context).size.width * 0.0526),
+                              bottom: (() {
+                                final card =
+                                    controller.playerCards['bottom']![i];
+                                final canPlay = controller.isCardPlayable(card);
+                                final isSelectable =
+                                    controller.isBottomPlayerTurn.value &&
+                                        canPlay;
+                                return isSelectable ? 16.0 : 0.0;
+                              })(),
+                              child: GestureDetector(
+                                onTap: () {
+                                  final card =
+                                      controller.playerCards['bottom']![i];
+                                  if (controller.isBottomPlayerTurn.value &&
+                                      controller.isCardPlayable(card)) {
+                                    controller.playCard(card);
+                                  }
+                                },
+                                child: Builder(
+                                  builder: (context) {
+                                    final card =
+                                        controller.playerCards['bottom']![i];
+                                    final canPlay =
+                                        controller.isCardPlayable(card);
+                                    return CardWidget(
+                                      key: ValueKey(
+                                          '${card.rankName}_${card.suit}'),
+                                      card: card,
+                                      isSelectable:
+                                          controller.isBottomPlayerTurn.value &&
+                                              canPlay,
+                                      borderColor: controller
+                                              .isBottomPlayerTurn.value
+                                          ? (canPlay ? Colors.blue : Colors.red)
+                                          : Colors.green,
+                                    );
+                                  },
+                                ),
+                              ),
+                            ),
+                        ],
+                      ),
+                    )
+                  : SizedBox(),
+            ),
+          ],
+        ),
+      );
+    });
   }
 
   /// نمایش کارت‌های بازیکن چپ (هوش مصنوعی حریف).
