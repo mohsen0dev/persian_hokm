@@ -358,6 +358,9 @@ class GameController extends GetxController {
     final dir = Direction.values
         .firstWhere((d) => _directionToString(d) == currentPlayer.value);
     final ai = game.players[dir.index];
+    if (game.table.isEmpty) {
+      print('\n---------------------------------------------------\n');
+    }
     final card = ai.play(
       table: List.from(game.table),
       tableHistory: List.from(game.tableHistory),
@@ -371,7 +374,7 @@ class GameController extends GetxController {
   /// مدیریت پایان یک دست و بروزرسانی امتیازات
   Future<void> _endHandUI(String winner) async {
     await Future.delayed(
-        Duration(milliseconds: (600 * animationSpeedFactor).toInt()));
+        Duration(milliseconds: (1000 * animationSpeedFactor).toInt()));
     tableCards.clear();
     firstSuit.value = null;
     // firstSuit.refresh();
@@ -381,19 +384,19 @@ class GameController extends GetxController {
     // isBottomPlayerTurn.refresh();
     // update();
     await Future.delayed(
-        Duration(milliseconds: (600 * animationSpeedFactor).toInt()));
+        Duration(milliseconds: (400 * animationSpeedFactor).toInt()));
     scoreManager.increaseHandScore(winner);
     if (scoreManager.isSetFinished()) {
       await Future.delayed(
-          Duration(milliseconds: (700 * animationSpeedFactor).toInt()));
+          Duration(milliseconds: (400 * animationSpeedFactor).toInt()));
       _endSet();
       return;
     }
     await Future.delayed(
-        Duration(milliseconds: (300 * animationSpeedFactor).toInt()));
+        Duration(milliseconds: (100 * animationSpeedFactor).toInt()));
     if (winner != 'bottom') {
       Future.delayed(
-          Duration(milliseconds: (300 * animationSpeedFactor).toInt()), () {
+          Duration(milliseconds: (100 * animationSpeedFactor).toInt()), () {
         _playComputerCard();
       });
     }
@@ -509,7 +512,6 @@ class GameController extends GetxController {
     //   players: game.players,
     // );
     if (game.table.isEmpty) {
-      print('\n---------------------------------------------------\n');
       firstSuit.value = card.suit;
     }
     game.playCard(card, dir);

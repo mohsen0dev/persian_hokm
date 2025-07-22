@@ -62,14 +62,20 @@ class GameScreen extends StatelessWidget {
               children: [
                 isColor
                     ? Container(color: settingsController.backgroundColors[idx])
-                    : Container(
-                        decoration: BoxDecoration(
-                          image: DecorationImage(
-                            image: AssetImage(
-                                settingsController.backgroundImages[idx -
-                                    settingsController
-                                        .backgroundColors.length]),
-                            fit: BoxFit.fill,
+                    : RotatedBox(
+                        quarterTurns: isLandscape ? 0 : 1,
+                        child: Container(
+                          margin: EdgeInsets.all(30),
+
+                          // padding: EdgeInsets.all(20),
+                          decoration: BoxDecoration(
+                            image: DecorationImage(
+                              image: AssetImage(
+                                  settingsController.backgroundImages[idx -
+                                      settingsController
+                                          .backgroundColors.length]),
+                              fit: BoxFit.fill,
+                            ),
                           ),
                         ),
                       ),
@@ -504,7 +510,7 @@ class GameScreen extends StatelessWidget {
   }
 
   /// ساختار پس‌زمینه متنی برای نمایش امتیازات و حکم.
-  Container bkgText(
+  Widget bkgText(
       {required Widget child,
       double vertical = 8.0,
       double horizontal = 16.0}) {
@@ -512,9 +518,9 @@ class GameScreen extends StatelessWidget {
         padding:
             EdgeInsets.symmetric(horizontal: horizontal, vertical: vertical),
         decoration: BoxDecoration(
-          color: Colors.grey.shade700.withOpacity(0.5),
-          borderRadius: BorderRadius.circular(12),
-        ),
+            color: Colors.grey.shade700,
+            borderRadius: BorderRadius.circular(12),
+            border: BoxBorder.all(color: Colors.black38)),
         child: child);
   }
 
@@ -629,12 +635,18 @@ class GameScreen extends StatelessWidget {
                               })(),
                               child: GestureDetector(
                                 onTap: () {
+                                  if (controller.game.table.isEmpty) {
+                                    print(
+                                        '\n---------------------------------------------------\n');
+                                  }
                                   final card =
                                       controller.playerCards['bottom']![i];
                                   if (controller.isBottomPlayerTurn.value &&
                                       controller.isCardPlayable(card)) {
                                     controller.playCard(card);
                                   }
+                                  print(
+                                      '------------------------------------ بازیکن انسانی: $card');
                                 },
                                 child: Builder(
                                   builder: (context) {
@@ -673,7 +685,7 @@ class GameScreen extends StatelessWidget {
   Widget cardLeft() {
     return Builder(
         builder: (context) => Obx(() => Positioned(
-            left: (controller.cardPositions['left']?.value ?? 50) + 46,
+            left: (controller.cardPositions['left']?.value ?? 50),
             bottom: 0,
             top: 0,
             child: Row(
@@ -696,8 +708,7 @@ class GameScreen extends StatelessWidget {
                         ? SizedBox(
                             height:
                                 (controller.playerCards['left']!.length * 20) +
-                                    65 +
-                                    40,
+                                    76,
                             width: 75,
                             child: Stack(
                               children: [
@@ -705,7 +716,7 @@ class GameScreen extends StatelessWidget {
                                     i < controller.playerCards['left']!.length;
                                     i++)
                                   Positioned(
-                                    top: i * 26,
+                                    top: i * 20,
                                     child: CardWidget(
                                       card: controller.playerCards['left']![i],
                                     ),
@@ -735,9 +746,8 @@ class GameScreen extends StatelessWidget {
               Obx(
                 () => controller.playerCards['right']?.isNotEmpty ?? false
                     ? SizedBox(
-                        height: (controller.playerCards['right']!.length * 20) +
-                            65 +
-                            40,
+                        height:
+                            (controller.playerCards['right']!.length * 20) + 76,
                         width: 65,
                         child: Stack(
                           alignment: Alignment.center,
@@ -746,7 +756,7 @@ class GameScreen extends StatelessWidget {
                                 i < controller.playerCards['right']!.length;
                                 i++)
                               Positioned(
-                                top: i * 26,
+                                top: i * 20,
                                 child: CardWidget(
                                   card: controller.playerCards['right']![i],
                                 ),
@@ -780,7 +790,7 @@ class GameScreen extends StatelessWidget {
         builder: (context) => Obx(
               () => Positioned(
                 top: (controller.cardPositions['top']?.value ?? 1),
-                left: 6,
+                left: 4,
                 right: 0,
                 child: Column(
                   children: [
@@ -788,19 +798,19 @@ class GameScreen extends StatelessWidget {
                       child: Obx(
                         () => controller.playerCards['top']?.isNotEmpty ?? false
                             ? SizedBox(
-                                // height: 90,
-                                height: 98,
+                                height: 95,
+                                // height: 98,
                                 width:
                                     controller.playerCards['top']!.length * 16 +
-                                        //55
-                                        95,
+                                        102,
                                 child: Stack(children: [
                                   for (int i = 0;
                                       i < controller.playerCards['top']!.length;
                                       i++)
                                     Positioned(
                                       //15
-                                      right: i * 19,
+                                      bottom: 0,
+                                      right: i * 20,
                                       child: CardWidget(
                                         card: controller.playerCards['top']![i],
                                       ),
