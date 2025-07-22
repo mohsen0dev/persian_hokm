@@ -27,8 +27,8 @@ class UIHelper {
   }
 
   /// نمایش دیالوگ پایان ست
-  static Future<void> showEndSetDialog(
-      BuildContext context, String message, VoidCallback onContinue) async {
+  static Future<void> showEndSetDialog(BuildContext context, String message,
+      VoidCallback onContinue, Color? txtClr) async {
     int secondsLeft = 3;
     Timer? timer;
     await Get.dialog(
@@ -45,7 +45,8 @@ class UIHelper {
           });
           return AlertDialog(
             title: Text('ست جدید'),
-            content: Text(message),
+            content:
+                Text(message, style: TextStyle(color: txtClr, fontSize: 16)),
             actions: [
               TextButton(
                 onPressed: () {
@@ -65,10 +66,11 @@ class UIHelper {
 
   /// نمایش دیالوگ پایان بازی
   static Future<void> showEndGameDialog(
-      BuildContext context, String message) async {
+      BuildContext context, String message, Color? txtClr) async {
     await Get.dialog(
       AlertDialog(
-        title: Text('پایان بازی'),
+        title:
+            Text('پایان بازی', style: TextStyle(color: txtClr, fontSize: 16)),
         content: Text(message),
         actions: [
           TextButton(

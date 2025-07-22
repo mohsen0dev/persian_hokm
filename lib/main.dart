@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:get/get_navigation/src/root/get_material_app.dart';
 import 'package:get_storage/get_storage.dart';
+import 'package:persian_hokm/game/presentation/pages/settings_screen.dart';
 import 'game/presentation/pages/home_screen.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:get/get.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -25,6 +26,7 @@ void main() async {
   ]);
 
   await GetStorage.init();
+  Get.put(SettingsController());
   runApp(const MyApp());
 }
 

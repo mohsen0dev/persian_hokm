@@ -1,3 +1,5 @@
+// ignore_for_file: avoid_print
+
 import 'package:persian_hokm/game/models/enums.dart';
 import 'package:persian_hokm/game/models/card.dart';
 import 'package:persian_hokm/game/models/team.dart'; // Will be created next
@@ -206,7 +208,6 @@ class PlayerAI extends Player {
 //! هوش مصنوعی نفر اول
   GameCard firstCard(Suit hokm, List<List<GameCard>> tableHistory,
       List<GameCard> table, List<Team> teams, Direction starterDirection) {
-    print('---------------------------------------------------\n . \n');
     // اگر یار در دست قبلی یک خال خاص بازی کرده و کارت از آن خال داری، ضعیف‌ترین کارت همان خال را بازی کن
     if (lastPartnerSuit != null) {
       final mySuitCards = hand.where((c) => c.suit == lastPartnerSuit).toList();
@@ -484,7 +485,7 @@ class PlayerAI extends Player {
         // کارت میز را نداریم
         // اگر همه کارت‌های حکم ما از کارت حکم نفر دوم کوچکترند
         bool allMyHokmWeaker = hokmCards.isEmpty ||
-            hokmCards.every((c) => c.rank.index < secondCard.rank.index);
+            hokmCards.every((c) => c.rank.index > secondCard.rank.index);
 
         if (allMyHokmWeaker) {
           // ضعیف‌ترین کارت غیرحکم را بازی کن
@@ -499,7 +500,7 @@ class PlayerAI extends Player {
           if (winningHokmCards.isNotEmpty) {
             print(
                 '[$name][$direction] (نفر سوم): نفر دوم بریده، با حکم قوی‌تر می‌توانم ببرم، قوی‌ترین حکم برنده را بازی می‌کنم');
-            return strongestCard(winningHokmCards);
+            return weakestCard(winningHokmCards);
           } else {
             // اگر به هر دلیلی نشد، fallback به ضعیف‌ترین غیرحکم
             return weakestCard(nonHokmCards);
@@ -528,9 +529,6 @@ class PlayerAI extends Player {
       // اگر هیچ کارت قوی‌تری نسبت به کارت یار در کارت‌های باقی‌مانده نبود، پس یار واقعاً برنده است
       partnerIsTrulyWinning = remainingSuitCards.isNotEmpty &&
           remainingSuitCards.every((c) => c.rank.index > firstCard.rank.index);
-      print('[DEBUG][thirdCard] partnerIsTrulyWinning: '
-          '\u001b[33m$partnerIsTrulyWinning\u001b[0m, '
-          'firstCard: $firstCard, remainingSuitCards: $remainingSuitCards, hand: $hand');
     }
     // اگر کارت همان خال را داری
     if (sameSuitCards.isNotEmpty) {

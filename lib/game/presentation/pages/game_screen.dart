@@ -788,7 +788,7 @@ class GameScreen extends StatelessWidget {
                       child: Obx(
                         () => controller.playerCards['top']?.isNotEmpty ?? false
                             ? SizedBox(
-                                // height: 88,
+                                // height: 90,
                                 height: 98,
                                 width:
                                     controller.playerCards['top']!.length * 16 +

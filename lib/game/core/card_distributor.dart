@@ -19,7 +19,7 @@ class CardDistributor {
     required RxList<dynamic> animatedCards,
     required bool Function() isActive,
     required void Function() update,
-    required Future<void> Function() onAceFound,
+    required Future<void> Function(String hakem) onAceFound,
   }) async {
     int currentCardIndex = 0;
     final distributionOrder = ['bottom', 'right', 'top', 'left'];
@@ -32,17 +32,17 @@ class CardDistributor {
       final animData =
           AnimatedCard(card: currentCard, targetPosition: currentPlayer);
       animatedCards.add(animData);
-      update();
+      // update();
       await Future.delayed(const Duration(milliseconds: 350));
       if (!isActive()) return null;
       playerCards[currentPlayer]?.add(currentCard);
       animatedCards.removeWhere((a) => a.key == animData.key);
       cards.removeAt(currentCardIndex);
-      update();
+      // update();
       await Future.delayed(const Duration(milliseconds: 60));
       if (!isActive()) return null;
       if (currentCard.rank == Rank.ace) {
-        await onAceFound();
+        await onAceFound(currentPlayer);
         return currentPlayer;
       }
       currentPlayerIndex = (currentPlayerIndex + 1) % 4;
@@ -69,14 +69,14 @@ class CardDistributor {
         final animData =
             AnimatedCard(card: card, targetPosition: _directionToString(dir));
         animatedCards.add(animData);
-        update();
+        // update();
         await Future.delayed(const Duration(milliseconds: 350));
         hands[dir.index].add(card);
         card.player = players.isNotEmpty ? players[dir.index] : null;
         playerCards[_directionToString(dir)]?.add(card);
         cards.removeAt(0);
         animatedCards.removeWhere((a) => a.key == animData.key);
-        update();
+        // update();
         await Future.delayed(const Duration(milliseconds: 60));
       }
     }

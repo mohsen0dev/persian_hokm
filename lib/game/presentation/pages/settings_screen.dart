@@ -12,6 +12,8 @@ class SettingsController extends GetxController {
   final backgroundIndex = 0.obs;
   // طرح پشت کارت: 0=قرمز، 1=آبی، 2=سبز، 3-6=عکس
   final cardBackIndex = 3.obs;
+  // گزینه فعال/غیرفعال بودن صدا
+  final soundEnabled = true.obs;
 
   final List<Color> backgroundColors = [
     Colors.black,
@@ -39,6 +41,7 @@ class SettingsController extends GetxController {
     aiLevel.value = box.read('aiLevel') ?? 2;
     backgroundIndex.value = box.read('backgroundIndex') ?? 0;
     cardBackIndex.value = box.read('cardBackIndex') ?? 3;
+    soundEnabled.value = box.read('soundEnabled') ?? true;
   }
 
   void saveSettings() async {
@@ -46,6 +49,7 @@ class SettingsController extends GetxController {
     await box.write('aiLevel', aiLevel.value);
     await box.write('backgroundIndex', backgroundIndex.value);
     await box.write('cardBackIndex', cardBackIndex.value);
+    await box.write('soundEnabled', soundEnabled.value);
   }
 
   void resetSettings() async {
@@ -53,6 +57,7 @@ class SettingsController extends GetxController {
     aiLevel.value = 2;
     backgroundIndex.value = 0;
     cardBackIndex.value = 3;
+    soundEnabled.value = true;
     await box.erase();
     saveSettings();
   }
@@ -146,6 +151,9 @@ class SettingsScreen extends StatelessWidget {
                         _sectionTitle('طرح پشت کارت‌ها'),
                         _buildCardBackPicker(),
                       ]),
+                      _settingsCard([
+                        _buildSoundSwitch(),
+                      ]),
                       const SizedBox(height: 24),
                     ],
                   ),
@@ -176,6 +184,9 @@ class SettingsScreen extends StatelessWidget {
                           _buildAILevelChips(),
                           SizedBox(height: 14),
                         ]),
+                        _settingsCard([
+                          _buildSoundSwitch(),
+                        ]),
                       ],
                     ),
                   ),
@@ -183,7 +194,6 @@ class SettingsScreen extends StatelessWidget {
                     width: MediaQuery.of(context).size.width / 2,
                     padding: EdgeInsets.only(left: 16, right: 8),
                     child: ListView(
-                      // physics: NeverScrollableScrollPhysics(),
                       children: [
                         _settingsCard([
                           _sectionTitle('پس‌زمینه صفحه بازی'),
@@ -423,6 +433,29 @@ class SettingsScreen extends StatelessWidget {
                         : null,
                   ),
                 )),
+      ],
+    );
+  }
+
+  Widget _buildSoundSwitch() {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Row(
+          children: [
+            Icon(Icons.volume_up, color: Colors.deepPurple.shade400, size: 22),
+            const SizedBox(width: 8),
+            const Text('صدا فعال باشد',
+                style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontFamily: 'Vazirmatn',
+                    fontSize: 16)),
+          ],
+        ),
+        Obx(() => Switch(
+              value: settingsController.soundEnabled.value,
+              onChanged: (val) => settingsController.soundEnabled.value = val,
+            )),
       ],
     );
   }

@@ -4,9 +4,11 @@ import 'package:audioplayers/audioplayers.dart';
 /// این کلاس مسئول پخش و مدیریت منابع صوتی است
 class SoundManager {
   final AudioPlayer _audioPlayer = AudioPlayer();
+  bool enabled = true; // پیش‌فرض فعال
 
   /// پخش صدای مورد نظر با نام داده شده
   Future<void> play(String name) async {
+    if (!enabled) return;
     try {
       await _audioPlayer.stop();
       await _audioPlayer.play(AssetSource('songs/$name'));
