@@ -1,3 +1,5 @@
+// ignore_for_file: avoid_print
+
 import 'package:persian_hokm/game/models/enums.dart';
 import 'package:persian_hokm/game/models/card.dart';
 import 'package:persian_hokm/game/models/team.dart'; // Will be created next
@@ -206,7 +208,6 @@ class PlayerAI extends Player {
 //! هوش مصنوعی نفر اول
   GameCard firstCard(Suit hokm, List<List<GameCard>> tableHistory,
       List<GameCard> table, List<Team> teams, Direction starterDirection) {
-    print('---------------------------------------------------\n . \n');
     // اگر یار در دست قبلی یک خال خاص بازی کرده و کارت از آن خال داری، ضعیف‌ترین کارت همان خال را بازی کن
     if (lastPartnerSuit != null) {
       final mySuitCards = hand.where((c) => c.suit == lastPartnerSuit).toList();
@@ -473,13 +474,39 @@ class PlayerAI extends Player {
     //! کارتهای غیر حکم
     final nonHokmCards = hand.where((c) => c.suit != hokm).toList();
 
-    // اگر نفر دوم با حکم زده و تو کارت همان خال داری، شانسی برای بردن نداری
-    if (secondCard.suit == hokm &&
-        leadSuit != hokm &&
-        sameSuitCards.isNotEmpty) {
-      print(
-          '[$name][$direction] (نفر سوم): نفر دوم بریده، ضعیف‌ترین همان خال را بازی می‌کنم');
-      return weakestCard(sameSuitCards);
+    // اگر نفر دوم  حکم زده و کارت میز حکم نیست
+    if (secondCard.suit == hokm && leadSuit != hokm) {
+      // تو کارت همان خال داری، شانسی برای بردن نداری. کارت ضعیف بازی کن
+      if (sameSuitCards.isNotEmpty) {
+        print(
+            '[$name][$direction] (نفر سوم): نفر دوم بریده، ضعیف‌ترین همان خال را بازی می‌کنم');
+        return weakestCard(sameSuitCards);
+      } else {
+        // کارت میز را نداریم
+        // اگر همه کارت‌های حکم ما از کارت حکم نفر دوم کوچکترند
+        bool allMyHokmWeaker = hokmCards.isEmpty ||
+            hokmCards.every((c) => c.rank.index > secondCard.rank.index);
+
+        if (allMyHokmWeaker) {
+          // ضعیف‌ترین کارت غیرحکم را بازی کن
+          print(
+              '[$name][$direction] (نفر سوم): نفر دوم بریده، فقط حکم ضعیف‌تر دارم، ضعیف‌ترین غیرحکم را بازی می‌کنم');
+          return weakestCard(nonHokmCards);
+        } else {
+          // کارت حکم قوی‌تر داریم که می‌تواند برنده شود
+          final winningHokmCards = hokmCards
+              .where((c) => c.rank.index < secondCard.rank.index)
+              .toList();
+          if (winningHokmCards.isNotEmpty) {
+            print(
+                '[$name][$direction] (نفر سوم): نفر دوم بریده، با حکم قوی‌تر می‌توانم ببرم، قوی‌ترین حکم برنده را بازی می‌کنم');
+            return weakestCard(winningHokmCards);
+          } else {
+            // اگر به هر دلیلی نشد، fallback به ضعیف‌ترین غیرحکم
+            return weakestCard(nonHokmCards);
+          }
+        }
+      }
     }
 
     // --- منطق جدید: آیا کارت یار واقعاً قوی‌ترین کارت باقی‌مانده است؟ ---
@@ -498,12 +525,10 @@ class PlayerAI extends Player {
                   .any((pc) => pc.suit == c.suit && pc.rank == c.rank) &&
               !hand.any((hc) => hc.suit == c.suit && hc.rank == c.rank))
           .toList();
+
       // اگر هیچ کارت قوی‌تری نسبت به کارت یار در کارت‌های باقی‌مانده نبود، پس یار واقعاً برنده است
-      partnerIsTrulyWinning =
+      partnerIsTrulyWinning = remainingSuitCards.isNotEmpty &&
           remainingSuitCards.every((c) => c.rank.index > firstCard.rank.index);
-      print('[DEBUG][thirdCard] partnerIsTrulyWinning: '
-          '\u001b[33m$partnerIsTrulyWinning\u001b[0m, '
-          'firstCard: $firstCard, remainingSuitCards: $remainingSuitCards, hand: $hand');
     }
     // اگر کارت همان خال را داری
     if (sameSuitCards.isNotEmpty) {

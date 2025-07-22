@@ -95,7 +95,7 @@ class HomeScreen extends StatelessWidget {
                               ),
                               const SizedBox(height: 16),
                               Text(
-                                'بازی حکم ایرانی',
+                                'بازی آس حکم',
                                 style: TextStyle(
                                   fontSize: (MediaQuery.of(context).size.width *
                                           0.01) +

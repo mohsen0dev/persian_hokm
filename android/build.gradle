@@ -1,8 +1,5 @@
 allprojects {
     repositories {
-        maven {
-            url 'https://maven.myket.ir'
-        }
         google()
         mavenCentral()
     }
@@ -11,8 +8,7 @@ allprojects {
 rootProject.buildDir = "../build"
 subprojects {
     project.buildDir = "${rootProject.buildDir}/${project.name}"
-}
-subprojects {
+
     project.evaluationDependsOn(":app")
 }
 

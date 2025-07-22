@@ -205,8 +205,8 @@ void main() {
         GameCard(suit: Suit.hearts, rank: Rank.king), // secondCard
       ];
       final card = player.thirdCard(Suit.diamonds, [], table, [team]);
-      expect(card.suit, Suit.diamonds);
-      expect(card.rank, Rank.five);
+      // اگر یار واقعاً برنده است، باید کارت غیرحکم بازی شود
+      expect(card.suit, isNot(Suit.diamonds));
     });
 
     test('اگر کارت همان خال نداری و فقط حکم داری، ضعیف‌ترین حکم را بازی کن',

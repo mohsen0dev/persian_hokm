@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:persian_hokm/game/models/card.dart';
 import 'dart:math';
 import 'card_widget.dart';
+import 'package:get/get.dart';
+import 'package:persian_hokm/game/presentation/pages/settings_screen.dart';
 
 class PlayedAnimatedCard extends StatelessWidget {
   final GameCard card;
@@ -35,9 +37,15 @@ class PlayedAnimatedCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // محاسبه مدت زمان انیمیشن بر اساس سرعت تنظیمات
+    final speed = Get.find<SettingsController>().animationSpeed.value;
+    double factor = 1.0;
+    if (speed == 0) factor = 1.7;
+    if (speed == 2) factor = 0.5;
+    final duration = Duration(milliseconds: (500 * factor).toInt());
     return TweenAnimationBuilder<double>(
       tween: Tween<double>(begin: 0, end: 1),
-      duration: const Duration(milliseconds: 500),
+      duration: duration,
       curve: Curves.easeInOutCubic,
       onEnd: onAnimationEnd,
       builder: (context, value, child) {
