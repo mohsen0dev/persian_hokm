@@ -44,7 +44,7 @@ class UIHelper {
             }
           });
           return AlertDialog(
-            title: Text('ست جدید'),
+            title: Text('نتیجه ست'),
             content:
                 Text(message, style: TextStyle(color: txtClr, fontSize: 16)),
             actions: [
@@ -69,9 +69,8 @@ class UIHelper {
       BuildContext context, String message, Color? txtClr) async {
     await Get.dialog(
       AlertDialog(
-        title:
-            Text('پایان بازی', style: TextStyle(color: txtClr, fontSize: 16)),
-        content: Text(message),
+        title: Text('پایان بازی'),
+        content: Text(message, style: TextStyle(color: txtClr, fontSize: 16)),
         actions: [
           TextButton(
             onPressed: () {

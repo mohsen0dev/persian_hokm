@@ -1,5 +1,6 @@
 // ignore_for_file: avoid_print
 
+import 'package:flutter/material.dart';
 import 'package:persian_hokm/game/models/enums.dart';
 import 'package:persian_hokm/game/models/card.dart';
 import 'package:persian_hokm/game/models/team.dart'; // Will be created next
@@ -737,6 +738,7 @@ class PlayerHuman extends Player {
     required Suit hokm,
     required Direction starterDirection,
   }) {
+    print('[$name][$direction] (انسان): ${table.first}');
     // منطق بازی بازیکن انسانی توسط UI کنترل می‌شود
     throw UnimplementedError('بازی بازیکن انسانی توسط UI انجام می‌شود');
   }
