@@ -8,6 +8,7 @@ import 'package:persian_hokm/game/presentation/widgets/animated_card.dart';
 import 'package:persian_hokm/game/presentation/widgets/card_widget.dart';
 import 'package:persian_hokm/game/presentation/widgets/played_animated_card.dart';
 import 'package:persian_hokm/game/presentation/widgets/screen_size_guard.dart';
+import 'dart:math' as math;
 
 class GameScreen extends StatelessWidget {
   /// کنترلر اصلی بازی که منطق و وضعیت بازی را مدیریت می‌کند.
@@ -586,6 +587,7 @@ class GameScreen extends StatelessWidget {
                           Positioned(
                             child: CardWidget(
                               card: controller.cards[i],
+                              //! پشت کارت ها را نمایش میدهد
                               showBack: true,
                             ),
                           ),
@@ -610,68 +612,80 @@ class GameScreen extends StatelessWidget {
             SizedBox(height: 6),
             Center(
               child: controller.playerCards['bottom']?.isNotEmpty ?? false
-                  ? SizedBox(
-                      height: 113,
-                      width: controller.playerCards['bottom']!.length *
-                              (MediaQuery.of(context).size.width * 0.0526) +
-                          52,
-                      child: Stack(
-                        alignment: AlignmentDirectional.center,
-                        children: [
-                          for (int i = 0;
-                              i < controller.playerCards['bottom']!.length;
-                              i++)
-                            Positioned(
-                              left: i *
-                                  (MediaQuery.of(context).size.width * 0.0526),
-                              bottom: (() {
-                                final card =
-                                    controller.playerCards['bottom']![i];
-                                final canPlay = controller.isCardPlayable(card);
-                                final isSelectable =
-                                    controller.isBottomPlayerTurn.value &&
-                                        canPlay;
-                                return isSelectable ? 16.0 : 0.0;
-                              })(),
-                              child: GestureDetector(
-                                onTap: () {
-                                  if (controller.game.table.isEmpty) {
-                                    print(
-                                        '\n---------------------------------------------------\n');
-                                  }
-                                  final card =
-                                      controller.playerCards['bottom']![i];
-                                  if (controller.isBottomPlayerTurn.value &&
-                                      controller.isCardPlayable(card)) {
-                                    controller.playCard(card);
-                                  }
-                                  print(
-                                      '------------------------------------ بازیکن انسانی: $card');
-                                },
-                                child: Builder(
-                                  builder: (context) {
+                  ? Builder(
+                      builder: (context) {
+                        final cardCount =
+                            controller.playerCards['bottom']!.length;
+                        final maxWidth = 900.0;
+                        final cardWidth =
+                            MediaQuery.of(context).size.width * 0.0626;
+                        final totalWidth = cardCount * cardWidth + 52;
+                        final actualWidth = math.min(totalWidth, maxWidth);
+                        final spacing = cardCount > 1
+                            ? (actualWidth - 52 - cardWidth) / (cardCount - 1)
+                            : 0.0;
+                        return SizedBox(
+                          height: 113,
+                          width: actualWidth,
+                          child: Stack(
+                            alignment: AlignmentDirectional.center,
+                            children: [
+                              for (int i = 0; i < cardCount; i++)
+                                Positioned(
+                                  left: i * spacing,
+                                  bottom: (() {
                                     final card =
                                         controller.playerCards['bottom']![i];
                                     final canPlay =
                                         controller.isCardPlayable(card);
-                                    return CardWidget(
-                                      key: ValueKey(
-                                          '${card.rankName}_${card.suit}'),
-                                      card: card,
-                                      isSelectable:
-                                          controller.isBottomPlayerTurn.value &&
+                                    final isSelectable =
+                                        controller.isBottomPlayerTurn.value &&
+                                            canPlay;
+                                    return isSelectable ? 16.0 : 0.0;
+                                  })(),
+                                  child: GestureDetector(
+                                    onTap: () {
+                                      if (controller.game.table.isEmpty) {
+                                        print(
+                                            '\n---------------------------------------------------\n');
+                                      }
+                                      final card =
+                                          controller.playerCards['bottom']![i];
+                                      if (controller.isBottomPlayerTurn.value &&
+                                          controller.isCardPlayable(card)) {
+                                        controller.playCard(card);
+                                      }
+                                      print(
+                                          '------------------------------------ بازیکن انسانی: $card');
+                                    },
+                                    child: Builder(
+                                      builder: (context) {
+                                        final card = controller
+                                            .playerCards['bottom']![i];
+                                        final canPlay =
+                                            controller.isCardPlayable(card);
+                                        return CardWidget(
+                                          key: ValueKey(
+                                              '${card.rankName}_${card.suit}'),
+                                          card: card,
+                                          isSelectable: controller
+                                                  .isBottomPlayerTurn.value &&
                                               canPlay,
-                                      borderColor: controller
-                                              .isBottomPlayerTurn.value
-                                          ? (canPlay ? Colors.blue : Colors.red)
-                                          : Colors.green,
-                                    );
-                                  },
+                                          borderColor: controller
+                                                  .isBottomPlayerTurn.value
+                                              ? (canPlay
+                                                  ? Colors.blue
+                                                  : Colors.red)
+                                              : Colors.green,
+                                        );
+                                      },
+                                    ),
+                                  ),
                                 ),
-                              ),
-                            ),
-                        ],
-                      ),
+                            ],
+                          ),
+                        );
+                      },
                     )
                   : SizedBox(),
             ),
@@ -708,7 +722,7 @@ class GameScreen extends StatelessWidget {
                         ? SizedBox(
                             height:
                                 (controller.playerCards['left']!.length * 20) +
-                                    76,
+                                    86,
                             width: 75,
                             child: Stack(
                               children: [
@@ -719,12 +733,17 @@ class GameScreen extends StatelessWidget {
                                     top: i * 20,
                                     child: CardWidget(
                                       card: controller.playerCards['left']![i],
+                                      //! پشت کارت ها را نمایش میدهد
+                                      showBack:
+                                          controller.isDistributingForHakem,
                                     ),
                                   ),
                               ],
                             ),
                           )
-                        : SizedBox(),
+                        : SizedBox(
+                            width: 70,
+                          ),
                   ),
                 ),
               ],
@@ -736,7 +755,7 @@ class GameScreen extends StatelessWidget {
     return Builder(
       builder: (context) => Obx(
         () => Positioned(
-          right: (controller.cardPositions['right']?.value ?? 50) + 50,
+          right: (controller.cardPositions['right']?.value ?? 50),
           bottom: 0,
           top: 0,
           child: Row(
@@ -747,8 +766,8 @@ class GameScreen extends StatelessWidget {
                 () => controller.playerCards['right']?.isNotEmpty ?? false
                     ? SizedBox(
                         height:
-                            (controller.playerCards['right']!.length * 20) + 76,
-                        width: 65,
+                            (controller.playerCards['right']!.length * 20) + 86,
+                        width: 66,
                         child: Stack(
                           alignment: Alignment.center,
                           children: [
@@ -759,12 +778,14 @@ class GameScreen extends StatelessWidget {
                                 top: i * 20,
                                 child: CardWidget(
                                   card: controller.playerCards['right']![i],
+                                  //! پشت کارت ها را نمایش میدهد
+                                  showBack: controller.isDistributingForHakem,
                                 ),
                               ),
                           ],
                         ),
                       )
-                    : SizedBox(),
+                    : SizedBox(width: 70),
               ),
               SizedBox(width: 6),
               bkgText(
@@ -802,7 +823,7 @@ class GameScreen extends StatelessWidget {
                                 // height: 98,
                                 width:
                                     controller.playerCards['top']!.length * 16 +
-                                        102,
+                                        66,
                                 child: Stack(children: [
                                   for (int i = 0;
                                       i < controller.playerCards['top']!.length;
@@ -810,13 +831,18 @@ class GameScreen extends StatelessWidget {
                                     Positioned(
                                       //15
                                       bottom: 0,
-                                      right: i * 20,
+                                      right: i * 17,
                                       child: CardWidget(
                                         card: controller.playerCards['top']![i],
+                                        //! پشت کارت ها را نمایش میدهد
+                                        showBack:
+                                            controller.isDistributingForHakem,
                                       ),
                                     ),
                                 ]))
-                            : SizedBox(),
+                            : SizedBox(
+                                // height: 70,
+                                ),
                       ),
                     ),
                     SizedBox(height: 2),

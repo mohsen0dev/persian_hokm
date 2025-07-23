@@ -14,6 +14,47 @@ class HomeScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     DateTime? lastBackPressTime;
     final orientation = MediaQuery.of(context).orientation;
+    var listItem = Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        cardListItems(
+            context,
+            'شروع بازی',
+            () => Get.to(
+                transition: Transition.leftToRight,
+                duration: const Duration(milliseconds: 600),
+                () => (GameScreen())),
+            icon: Icons.play_circle_outline_outlined,
+            color: Colors.greenAccent.shade400,
+            dark: true),
+        cardListItems(
+          context,
+          'تنظیمات بازی',
+          () => Get.to(
+            transition: Transition.leftToRight,
+            duration: const Duration(milliseconds: 600),
+            () => SettingsScreen(),
+          ),
+          icon: Icons.settings_rounded,
+          color: Colors.blueAccent.shade100,
+          dark: true,
+        ),
+        cardListItems(
+            context,
+            'درباره ما',
+            () => Get.to(
+                    transition: Transition.leftToRight,
+                    duration: const Duration(milliseconds: 600), () {
+                  return AbuteMeScreen();
+                }),
+            icon: Icons.info_outline_rounded,
+            color: Colors.orangeAccent.shade200,
+            dark: true),
+        cardListItems(context, 'نسخه بتا 0.0.1', null,
+            color: Colors.purpleAccent.shade100, dark: true),
+      ],
+    );
     return PopScope(
       canPop: false,
       onPopInvokedWithResult: (bool didPop, PopupRoute? route) async {
@@ -118,40 +159,7 @@ class HomeScreen extends StatelessWidget {
                         SizedBox(
                           height: MediaQuery.of(context).size.height * 0.04,
                         ),
-                        cardListItems(
-                            context,
-                            'شروع بازی',
-                            () => Get.to(
-                                transition: Transition.leftToRight,
-                                duration: const Duration(milliseconds: 600),
-                                () => (GameScreen())),
-                            icon: Icons.play_circle_outline_outlined,
-                            color: Colors.greenAccent.shade400,
-                            dark: true),
-                        cardListItems(
-                            context,
-                            'تنظیمات بازی',
-                            () => Get.to(
-                                transition: Transition.leftToRight,
-                                duration: const Duration(milliseconds: 600),
-                                () => SettingsScreen()),
-                            icon: Icons.settings_rounded,
-                            color: Colors.blueAccent.shade100,
-                            dark: true),
-                        cardListItems(
-                            context,
-                            'درباره ما',
-                            () => Get.to(
-                                transition: Transition.leftToRight,
-                                duration: const Duration(milliseconds: 600),
-                                () => AbuteMeScreen()),
-                            icon: Icons.info_outline_rounded,
-                            color: Colors.orangeAccent.shade200,
-                            dark: true),
-                        cardListItems(context, 'ارسال لینک بازی', () {},
-                            icon: Icons.share_rounded,
-                            color: Colors.purpleAccent.shade100,
-                            dark: true),
+                        listItem,
                         const SizedBox(height: 32),
                       ],
                     ),
@@ -160,51 +168,7 @@ class HomeScreen extends StatelessWidget {
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                       children: [
-                        Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          crossAxisAlignment: CrossAxisAlignment.center,
-                          children: [
-                            cardListItems(
-                                context,
-                                'شروع بازی',
-                                () => Get.to(
-                                    transition: Transition.leftToRight,
-                                    duration: const Duration(milliseconds: 600),
-                                    () => (GameScreen())),
-                                icon: Icons.play_circle_outline_outlined,
-                                color: Colors.greenAccent.shade400,
-                                dark: true),
-                            cardListItems(
-                              context,
-                              'تنظیمات بازی',
-                              () => Get.to(
-                                transition: Transition.leftToRight,
-                                duration: const Duration(milliseconds: 600),
-                                () => SettingsScreen(),
-                              ),
-                              icon: Icons.settings_rounded,
-                              color: Colors.blueAccent.shade100,
-                              dark: true,
-                            ),
-                            cardListItems(
-                                context,
-                                'درباره ما',
-                                () => Get.to(
-                                        transition: Transition.leftToRight,
-                                        duration:
-                                            const Duration(milliseconds: 600),
-                                        () {
-                                      return AbuteMeScreen();
-                                    }),
-                                icon: Icons.info_outline_rounded,
-                                color: Colors.orangeAccent.shade200,
-                                dark: true),
-                            cardListItems(context, 'ارسال لینک بازی', () {},
-                                icon: Icons.share_rounded,
-                                color: Colors.purpleAccent.shade100,
-                                dark: true),
-                          ],
-                        ),
+                        listItem,
                         Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           crossAxisAlignment: CrossAxisAlignment.center,
@@ -230,7 +194,7 @@ class HomeScreen extends StatelessWidget {
                             ),
                             const SizedBox(height: 18),
                             Text(
-                              'بازی حکم ایرانی',
+                              'بازی آس حکم',
                               style: TextStyle(
                                 fontSize:
                                     (MediaQuery.of(context).size.width * 0.01) +
@@ -258,7 +222,7 @@ class HomeScreen extends StatelessWidget {
     );
   }
 
-  Widget cardListItems(BuildContext context, String text, Function onTap,
+  Widget cardListItems(BuildContext context, String text, Function? onTap,
       {IconData? icon, required Color color, bool dark = false}) {
     return Center(
       child: AnimatedContainer(
@@ -290,16 +254,16 @@ class HomeScreen extends StatelessWidget {
             borderRadius: BorderRadius.circular(18),
             splashColor: color.withOpacity(0.3),
             highlightColor: color.withOpacity(0.1),
-            onTap: () {
-              onTap();
-            },
+            onTap: onTap != null ? () => onTap() : null,
             child: Padding(
               padding: EdgeInsets.only(left: 15, right: 8),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Icon(Icons.arrow_back_ios_new_rounded,
-                      size: 16, color: color),
+                  icon == null
+                      ? const SizedBox()
+                      : Icon(Icons.arrow_back_ios_new_rounded,
+                          size: 16, color: color),
                   Text(
                     text,
                     style: TextStyle(
@@ -309,9 +273,9 @@ class HomeScreen extends StatelessWidget {
                       fontFamily: 'Vazirmatn',
                     ),
                   ),
-                  if (icon != null) ...[
-                    Icon(icon, color: color, size: 30),
-                  ],
+                  icon == null
+                      ? const SizedBox()
+                      : Icon(icon, color: color, size: 30),
                 ],
               ),
             ),

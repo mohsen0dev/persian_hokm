@@ -1,6 +1,4 @@
 // ignore_for_file: avoid_print
-
-import 'package:flutter/material.dart';
 import 'package:persian_hokm/game/models/enums.dart';
 import 'package:persian_hokm/game/models/card.dart';
 import 'package:persian_hokm/game/models/team.dart'; // Will be created next
@@ -492,7 +490,8 @@ class PlayerAI extends Player {
           // ضعیف‌ترین کارت غیرحکم را بازی کن
           print(
               '[$name][$direction] (نفر سوم): نفر دوم بریده، فقط حکم ضعیف‌تر دارم، ضعیف‌ترین غیرحکم را بازی می‌کنم');
-          return weakestCard(nonHokmCards);
+          return weakestCard(
+              nonHokmCards.isNotEmpty ? nonHokmCards : hokmCards);
         } else {
           // کارت حکم قوی‌تر داریم که می‌تواند برنده شود
           final winningHokmCards = hokmCards
@@ -504,7 +503,8 @@ class PlayerAI extends Player {
             return weakestCard(winningHokmCards);
           } else {
             // اگر به هر دلیلی نشد، fallback به ضعیف‌ترین غیرحکم
-            return weakestCard(nonHokmCards);
+            return weakestCard(
+                nonHokmCards.isNotEmpty ? nonHokmCards : hokmCards);
           }
         }
       }
