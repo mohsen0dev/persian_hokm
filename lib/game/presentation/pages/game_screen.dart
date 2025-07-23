@@ -520,7 +520,7 @@ class GameScreen extends StatelessWidget {
         decoration: BoxDecoration(
             color: Colors.grey.shade700,
             borderRadius: BorderRadius.circular(12),
-            border: BoxBorder.all(color: Colors.black38)),
+            border: Border.all(color: Colors.black38)),
         child: child);
   }
 
