@@ -13,7 +13,7 @@ class CardWidget extends StatelessWidget {
     super.key,
     required this.card,
     this.isSelectable = false,
-    this.borderColor = Colors.black26,
+    this.borderColor = Colors.green,
     this.showBack = false,
   });
 
