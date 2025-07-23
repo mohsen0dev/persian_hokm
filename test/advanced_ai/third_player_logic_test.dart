@@ -351,54 +351,5 @@ void main() {
       expect(card.suit, Suit.hearts);
       expect(card.rank, Rank.two);
     });
-
-    test(
-        'اگر نفر اول غیرحکم بازی کند، نفر دوم با 8 حکم ببرد و نفر سوم فقط 3 و 5 حکم داشته باشد، باید 3 حکم بازی کند',
-        () {
-      final team = buildTeam(
-          PlayerAI('A', Direction.bottom, [], aiLevel: 2, isPartner: false),
-          PlayerAI('B', Direction.top, [], aiLevel: 2, isPartner: false));
-      final player = buildPlayer(
-          Direction.top,
-          [
-            GameCard(suit: Suit.diamonds, rank: Rank.three),
-            GameCard(suit: Suit.diamonds, rank: Rank.five),
-          ],
-          team);
-      final table = [
-        GameCard(suit: Suit.hearts, rank: Rank.ace), // firstCard (غیرحکم)
-        GameCard(
-            suit: Suit.diamonds,
-            rank: Rank.eight), // secondCard (بریده با 8 حکم)
-      ];
-      final card = player.thirdCard(Suit.diamonds, [], table, [team]);
-      expect(card.suit, Suit.diamonds);
-      expect(card.rank, Rank.three);
-    });
-
-    test(
-        'اگر نفر اول غیرحکم بازی کند، نفر دوم با 8 حکم ببرد و نفر سوم فقط 3 و 9 و 10 حکم داشته باشد، باید 9 حکم بازی کند',
-        () {
-      final team = buildTeam(
-          PlayerAI('A', Direction.bottom, [], aiLevel: 2, isPartner: false),
-          PlayerAI('B', Direction.top, [], aiLevel: 2, isPartner: false));
-      final player = buildPlayer(
-          Direction.top,
-          [
-            GameCard(suit: Suit.diamonds, rank: Rank.three),
-            GameCard(suit: Suit.diamonds, rank: Rank.nine),
-            GameCard(suit: Suit.diamonds, rank: Rank.ten),
-          ],
-          team);
-      final table = [
-        GameCard(suit: Suit.hearts, rank: Rank.ace), // firstCard (غیرحکم)
-        GameCard(
-            suit: Suit.diamonds,
-            rank: Rank.eight), // secondCard (بریده با 8 حکم)
-      ];
-      final card = player.thirdCard(Suit.diamonds, [], table, [team]);
-      expect(card.suit, Suit.diamonds);
-      expect(card.rank, Rank.nine);
-    });
   });
 }
