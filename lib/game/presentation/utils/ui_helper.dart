@@ -8,7 +8,7 @@ class UIHelper {
   static void showSnackBar(BuildContext context, String message) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        duration: Duration(milliseconds: 700),
+        duration: Duration(milliseconds: 500),
         width: 150,
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(

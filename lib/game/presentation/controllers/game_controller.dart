@@ -179,7 +179,7 @@ class GameController extends GetxController {
     isThirdDistributionDone.value = false;
     cardPositions.value = {
       'left': (-50.0).obs,
-      'right': (-50.0).obs,
+      'right': (-90.0).obs,
       'top': (-70.0).obs,
     };
     if (game.players.isEmpty) {
@@ -250,7 +250,7 @@ class GameController extends GetxController {
       game.deck = List.from(newDeck);
       cardPositions.value = {
         'left': (-50.0).obs,
-        'right': (-50.0).obs,
+        'right': (-90.0).obs,
         'top': (-70.0).obs,
       };
       game.hakem = _stringToDirection(hokmPlayer.value ?? '');
@@ -560,7 +560,4 @@ class GameController extends GetxController {
     if (speed == 2) return 0.5; // تند
     return 1.0; // عادی
   }
-
-  /// آیا در مرحله توزیع کارت برای تعیین حاکم هستیم؟
-  bool get isDistributingForHakem => hokmPlayer.value != '';
 }

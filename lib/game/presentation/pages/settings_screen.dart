@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
-import 'package:persian_hokm/game/presentation/widgets/screen_size_guard.dart';
 
 class SettingsController extends GetxController {
   final box = GetStorage();
@@ -112,110 +111,108 @@ class SettingsScreen extends StatelessWidget {
         backgroundColor: Colors.deepPurple.shade400,
         elevation: 2,
       ),
-      body: ScreenSizeGuard(
-        child: Container(
-          width: double.infinity,
-          height: double.infinity,
-          decoration: const BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topRight,
-              end: Alignment.bottomLeft,
-              colors: [
-                Color(0xFF232526),
-                Color(0xFF414345),
-              ],
-            ),
+      body: Container(
+        width: double.infinity,
+        height: double.infinity,
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topRight,
+            end: Alignment.bottomLeft,
+            colors: [
+              Color(0xFF232526),
+              Color(0xFF414345),
+            ],
           ),
-          child: Obx(() {
-            if (orientation == Orientation.portrait) {
-              return SingleChildScrollView(
-                padding: EdgeInsets.only(left: 16, right: 16),
-                child: ConstrainedBox(
-                  constraints: BoxConstraints(
-                    minHeight: MediaQuery.of(context).size.height - 100,
+        ),
+        child: Obx(() {
+          if (orientation == Orientation.portrait) {
+            return SingleChildScrollView(
+              padding: EdgeInsets.only(left: 16, right: 16),
+              child: ConstrainedBox(
+                constraints: BoxConstraints(
+                  minHeight: MediaQuery.of(context).size.height - 100,
+                ),
+                child: IntrinsicHeight(
+                  child: Column(
+                    children: [
+                      _settingsCard([
+                        _sectionTitle('سرعت پخش کارت‌ها'),
+                        _buildAnimationSpeedChips(),
+                      ]),
+                      _settingsCard([
+                        _sectionTitle('هوش مصنوعی حریفان'),
+                        _buildAILevelChips(),
+                      ]),
+                      _settingsCard([
+                        _sectionTitle('پس‌زمینه صفحه بازی'),
+                        _buildBackgroundPicker(),
+                      ]),
+                      _settingsCard([
+                        _sectionTitle('طرح پشت کارت‌ها'),
+                        _buildCardBackPicker(),
+                      ]),
+                      _settingsCard([
+                        _buildSoundSwitch(),
+                      ]),
+                      const SizedBox(height: 24),
+                    ],
                   ),
-                  child: IntrinsicHeight(
-                    child: Column(
+                ),
+              ),
+            );
+          } else {
+            // حالت افقی: دو ستون اسکرول‌پذیر
+            return SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Container(
+                    width: MediaQuery.of(context).size.width / 2,
+                    padding: EdgeInsets.only(left: 8, right: 16),
+                    child: ListView(
                       children: [
                         _settingsCard([
                           _sectionTitle('سرعت پخش کارت‌ها'),
+                          SizedBox(height: 14),
                           _buildAnimationSpeedChips(),
+                          SizedBox(height: 14),
                         ]),
                         _settingsCard([
                           _sectionTitle('هوش مصنوعی حریفان'),
+                          SizedBox(height: 14),
                           _buildAILevelChips(),
-                        ]),
-                        _settingsCard([
-                          _sectionTitle('پس‌زمینه صفحه بازی'),
-                          _buildBackgroundPicker(),
-                        ]),
-                        _settingsCard([
-                          _sectionTitle('طرح پشت کارت‌ها'),
-                          _buildCardBackPicker(),
+                          SizedBox(height: 14),
                         ]),
                         _settingsCard([
                           _buildSoundSwitch(),
                         ]),
-                        const SizedBox(height: 24),
                       ],
                     ),
                   ),
-                ),
-              );
-            } else {
-              // حالت افقی: دو ستون اسکرول‌پذیر
-              return SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Container(
-                      width: MediaQuery.of(context).size.width / 2,
-                      padding: EdgeInsets.only(left: 8, right: 16),
-                      child: ListView(
-                        children: [
-                          _settingsCard([
-                            _sectionTitle('سرعت پخش کارت‌ها'),
-                            SizedBox(height: 14),
-                            _buildAnimationSpeedChips(),
-                            SizedBox(height: 14),
-                          ]),
-                          _settingsCard([
-                            _sectionTitle('هوش مصنوعی حریفان'),
-                            SizedBox(height: 14),
-                            _buildAILevelChips(),
-                            SizedBox(height: 14),
-                          ]),
-                          _settingsCard([
-                            _buildSoundSwitch(),
-                          ]),
-                        ],
-                      ),
+                  Container(
+                    width: MediaQuery.of(context).size.width / 2,
+                    padding: EdgeInsets.only(left: 16, right: 8),
+                    child: ListView(
+                      children: [
+                        _settingsCard([
+                          _sectionTitle('پس‌زمینه صفحه بازی'),
+                          SizedBox(height: 5),
+                          _buildBackgroundPicker(),
+                        ]),
+                        _settingsCard([
+                          _sectionTitle('طرح پشت کارت‌ها'),
+                          SizedBox(height: 5),
+                          _buildCardBackPicker(),
+                        ]),
+                      ],
                     ),
-                    Container(
-                      width: MediaQuery.of(context).size.width / 2,
-                      padding: EdgeInsets.only(left: 16, right: 8),
-                      child: ListView(
-                        children: [
-                          _settingsCard([
-                            _sectionTitle('پس‌زمینه صفحه بازی'),
-                            SizedBox(height: 5),
-                            _buildBackgroundPicker(),
-                          ]),
-                          _settingsCard([
-                            _sectionTitle('طرح پشت کارت‌ها'),
-                            SizedBox(height: 5),
-                            _buildCardBackPicker(),
-                          ]),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              );
-            }
-          }),
-        ),
+                  ),
+                ],
+              ),
+            );
+          }
+        }),
       ),
     );
   }

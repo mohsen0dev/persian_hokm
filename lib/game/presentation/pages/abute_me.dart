@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:persian_hokm/game/presentation/widgets/screen_size_guard.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class AbuteMeScreen extends StatelessWidget {
@@ -123,41 +122,39 @@ class AbuteMeScreen extends StatelessWidget {
             ],
           ),
         ),
-        child: ScreenSizeGuard(
-          child: Center(
-            child: SizedBox(
-              width: 650,
-              child: Card(
-                color: Colors.white.withOpacity(0.08),
-                elevation: 12,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(28),
-                  side: const BorderSide(color: Colors.white24, width: 1.2),
-                ),
-                child: Padding(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 40, vertical: 40),
-                  child: orientation == Orientation.portrait
-                      ? Column(
-                          mainAxisSize: MainAxisSize.min,
-                          crossAxisAlignment: CrossAxisAlignment.center,
-                          children: [
-                            mainInfo,
-                            const SizedBox(height: 8),
-                            details,
-                          ],
-                        )
-                      : Row(
-                          mainAxisSize: MainAxisSize.min,
-                          crossAxisAlignment: CrossAxisAlignment.center,
-                          mainAxisAlignment: MainAxisAlignment.spaceAround,
-                          children: [
-                            Expanded(child: mainInfo),
-                            const SizedBox(width: 32),
-                            Expanded(child: details),
-                          ],
-                        ),
-                ),
+        child: Center(
+          child: SizedBox(
+            width: 650,
+            child: Card(
+              color: Colors.white.withOpacity(0.08),
+              elevation: 12,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(28),
+                side: const BorderSide(color: Colors.white24, width: 1.2),
+              ),
+              child: Padding(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 40, vertical: 40),
+                child: orientation == Orientation.portrait
+                    ? Column(
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          mainInfo,
+                          const SizedBox(height: 8),
+                          details,
+                        ],
+                      )
+                    : Row(
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        mainAxisAlignment: MainAxisAlignment.spaceAround,
+                        children: [
+                          Expanded(child: mainInfo),
+                          const SizedBox(width: 32),
+                          Expanded(child: details),
+                        ],
+                      ),
               ),
             ),
           ),
