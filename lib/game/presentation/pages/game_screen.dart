@@ -3,12 +3,15 @@ import 'package:get/get.dart';
 
 import 'package:persian_hokm/game/models/card.dart';
 import 'package:persian_hokm/game/presentation/controllers/game_controller.dart';
+import 'package:persian_hokm/game/presentation/pages/home_screen.dart';
 import 'package:persian_hokm/game/presentation/pages/settings_screen.dart';
 import 'package:persian_hokm/game/presentation/widgets/animated_card.dart';
+import 'package:persian_hokm/game/presentation/widgets/card_list_ittems.dart';
 import 'package:persian_hokm/game/presentation/widgets/card_widget.dart';
 import 'package:persian_hokm/game/presentation/widgets/played_animated_card.dart';
 import 'package:persian_hokm/game/presentation/widgets/screen_size_guard.dart';
 import 'dart:math' as math;
+import 'package:confetti/confetti.dart';
 
 class GameScreen extends StatelessWidget {
   /// کنترلر اصلی بازی که منطق و وضعیت بازی را مدیریت می‌کند.
@@ -16,6 +19,10 @@ class GameScreen extends StatelessWidget {
 
   /// کنترلر تنظیمات برای دسترسی به تنظیمات پس‌زمینه و غیره.
   final settingsController = Get.put(SettingsController());
+
+  /// کنترلر فشفشه برای نمایش انیمیشن برنده نهایی
+  final ConfettiController _confettiController =
+      ConfettiController(duration: Duration(seconds: 3));
 
   GameScreen({super.key});
 
@@ -52,95 +59,130 @@ class GameScreen extends StatelessWidget {
           }
         }
       },
-      child: Obx(() {
-        final idx = settingsController.backgroundIndex.value;
-        final isColor = idx < settingsController.backgroundColors.length;
-        return ScreenSizeGuard(
-          child: Scaffold(
-            body: Stack(
-              alignment: Alignment.center,
-              fit: StackFit.expand,
-              children: [
-                isColor
-                    ? Container(color: settingsController.backgroundColors[idx])
-                    : RotatedBox(
-                        quarterTurns: isLandscape ? 0 : 1,
-                        child: Container(
-                          margin: EdgeInsets.all(30),
-
-                          // padding: EdgeInsets.all(20),
-                          decoration: BoxDecoration(
-                            image: DecorationImage(
-                              image: AssetImage(
-                                  settingsController.backgroundImages[idx -
-                                      settingsController
-                                          .backgroundColors.length]),
-                              fit: BoxFit.fill,
+      child: Stack(
+        children: [
+          Obx(() {
+            final idx = settingsController.backgroundIndex.value;
+            final isColor = idx < settingsController.backgroundColors.length;
+            return ScreenSizeGuard(
+              child: Scaffold(
+                body: Stack(
+                  alignment: Alignment.center,
+                  fit: StackFit.expand,
+                  children: [
+                    isColor
+                        ? Container(
+                            color: settingsController.backgroundColors[idx])
+                        : RotatedBox(
+                            quarterTurns: isLandscape ? 0 : 1,
+                            child: Container(
+                              margin: EdgeInsets.all(30),
+                              // padding: EdgeInsets.all(20),
+                              decoration: BoxDecoration(
+                                image: DecorationImage(
+                                  image: AssetImage(
+                                      settingsController.backgroundImages[idx -
+                                          settingsController
+                                              .backgroundColors.length]),
+                                  fit: BoxFit.fill,
+                                ),
+                              ),
                             ),
                           ),
-                        ),
+                    textTop(context),
+                    cardCenter(isLandscape),
+                    Obx(() => controller.showCards.value
+                        ? Container(child: cardBotton(context))
+                        : SizedBox()),
+                    Obx(() =>
+                        controller.showCards.value ? cardLeft() : SizedBox()),
+                    Obx(() =>
+                        controller.showCards.value ? cardRight() : SizedBox()),
+                    Obx(() =>
+                        controller.showCards.value ? cardTop() : SizedBox()),
+                    Positioned(
+                      right: 4,
+                      top: 4,
+                      child: CircleAvatar(
+                        child: CloseButton(),
                       ),
-                textTop(context),
-                cardCenter(isLandscape),
-                Obx(() => controller.showCards.value
-                    ? Container(child: cardBotton(context))
-                    : SizedBox()),
-                Obx(() => controller.showCards.value ? cardLeft() : SizedBox()),
-                Obx(() =>
-                    controller.showCards.value ? cardRight() : SizedBox()),
-                Obx(() => controller.showCards.value ? cardTop() : SizedBox()),
-                Positioned(
-                  right: 4,
-                  top: 4,
-                  child: CircleAvatar(
-                    child: CloseButton(),
-                  ),
-                ),
-                Obx(() => controller.showHokmDialog.value &&
-                        controller.hokmPlayer.value == 'bottom'
-                    ? _buildHokmSelectionDialog()
-                    : SizedBox()),
-                // نمایش کارت‌های متحرک بالای همه ویجت‌ها
-                Obx(() => Stack(
-                      children: [
-                        for (final animCard in controller.animatedCards)
-                          AnimatedCard(
-                            key: animCard.key,
-                            card: animCard.card,
-                            targetPosition: animCard.targetPosition,
-                            showBack: true,
+                    ),
+                    Obx(() => controller.showHokmDialog.value &&
+                            controller.hokmPlayer.value == 'bottom'
+                        ? _buildHokmSelectionDialog()
+                        : SizedBox()),
+                    // نمایش کارت‌های متحرک بالای همه ویجت‌ها
+                    Obx(() => Stack(
+                          children: [
+                            for (final animCard in controller.animatedCards)
+                              AnimatedCard(
+                                key: animCard.key,
+                                card: animCard.card,
+                                targetPosition: animCard.targetPosition,
+                                showBack: true,
+                              ),
+                          ],
+                        )),
+                    // نمایش کارت‌های متحرک بازی (از دست بازیکن به مرکز)
+                    Obx(() => Center(
+                          child: Stack(
+                            children: [
+                              for (final animCard
+                                  in controller.animatedPlayedCards)
+                                PlayedAnimatedCard(
+                                  key: animCard.key,
+                                  card: animCard.card,
+                                  fromPosition: animCard.fromPosition,
+                                  isCut: animCard.isCut,
+                                ),
+                            ],
                           ),
-                      ],
-                    )),
-                // نمایش کارت‌های متحرک بازی (از دست بازیکن به مرکز)
-                Obx(() => Center(
-                      child: Stack(
-                        children: [
-                          for (final animCard in controller.animatedPlayedCards)
-                            PlayedAnimatedCard(
-                              key: animCard.key,
-                              card: animCard.card,
-                              fromPosition: animCard.fromPosition,
-                              isCut: animCard.isCut,
-                            ),
+                        )),
+                    // ویجت فشفشه (confetti)
+                    Align(
+                      alignment: Alignment.topCenter,
+                      child: ConfettiWidget(
+                        confettiController: _confettiController,
+                        blastDirectionality: BlastDirectionality.explosive,
+                        shouldLoop: false,
+                        colors: const [
+                          Colors.green,
+                          Colors.blue,
+                          Colors.pink,
+                          Colors.orange,
+                          Colors.purple
                         ],
+                        numberOfParticles: 30,
+                        maxBlastForce: 30,
+                        minBlastForce: 10,
+                        gravity: 0.2,
+                        emissionFrequency: 0.05,
                       ),
-                    )),
-              ],
-            ),
-          ),
-        );
-      }),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          }),
+        ],
+      ),
     );
+  }
+
+  /// نمایش انیمیشن فشفشه و پخش آهنگ برنده نهایی
+  void showWinnerCelebration() {
+    _confettiController.play();
   }
 
   /// نمایش اطلاعات بالای صفحه شامل امتیازات و خال حکم انتخاب شده.
   Widget textTop(BuildContext context) {
+    /// ایندکس پشت کارت انتخاب شده توسط کاربر
     final idx = settingsController.cardBackIndex.value;
     final isColor = idx < settingsController.cardBackColors.length;
+
+    /// آیا صفحه در حالت افقی است یا عمودی
     final isLandscape =
         MediaQuery.of(context).orientation == Orientation.landscape;
-
     if (!isLandscape) {
       // حالت عمودی
       return Positioned(
@@ -319,6 +361,7 @@ class GameScreen extends StatelessWidget {
                         ),
                         InkWell(
                           onTap: () => _showPlayedCardsDialog(context),
+                          // onTap: () => showWinnerCelebration(),
                           child: Image.asset(
                             'assets/drawables/${_getSuitImageName(controller.selectedHokm.value!)}',
                             width: 30,
@@ -602,13 +645,83 @@ class GameScreen extends StatelessWidget {
   /// نمایش کارت‌های بازیکن پایین (بازیکن انسانی).
   Widget cardBotton(BuildContext context) {
     return Obx(() {
+      var color = Colors.red;
       return Positioned(
         bottom: controller.cardPositions['bottom']?.value ?? 4,
         left: 0,
         right: 0,
         child: Column(
           children: [
-            if (controller.hokmPlayer.value == 'bottom') ...tajAnCir(),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Obx(() => (controller.team1WonHands.isNotEmpty &&
+                        controller.team2WonHands.isNotEmpty)
+                    ? Container(
+                        // width: 120,
+                        // height: 40,
+                        margin: const EdgeInsets.symmetric(
+                            vertical: 1, horizontal: 2),
+
+                        decoration: BoxDecoration(
+                          color: const Color(0xFf232526).withOpacity(0.92),
+                          borderRadius: BorderRadius.circular(8),
+                          boxShadow: [
+                            BoxShadow(
+                              color: color.withOpacity(0.28),
+                              blurRadius: 12,
+                              offset: const Offset(0, 6),
+                            ),
+                          ],
+                          border: Border.all(
+                            color: color,
+                            width: 1.2,
+                          ),
+                        ),
+                        child: Material(
+                          color: Colors.transparent,
+                          borderRadius: BorderRadius.circular(8),
+                          child: InkWell(
+                            borderRadius: BorderRadius.circular(8),
+                            splashColor: color.withOpacity(0.3),
+                            highlightColor: color.withOpacity(0.1),
+                            onTap: () async {
+                              // نمایش دیالوگ تایید واگذاری ست
+                              final result = await showModalBottomSheet<bool>(
+                                context: context,
+                                backgroundColor: Colors.transparent,
+                                isScrollControlled: true,
+                                builder: (context) =>
+                                    _buildGiveUpSetSheet(context),
+                              );
+                              if (result == true) {
+                                controller.giveUpSet();
+                              }
+                            },
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(
+                                  vertical: 6, horizontal: 8),
+                              child: Text(
+                                'واگذاری ست',
+                                style: TextStyle(
+                                  // fontSize: 18,
+                                  fontWeight: FontWeight.w600,
+                                  color: color,
+                                  fontFamily: 'Vazirmatn',
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      )
+                    : SizedBox()),
+                if (controller.hokmPlayer.value == 'bottom')
+                  SizedBox(width: 20),
+                if (controller.hokmPlayer.value == 'bottom') ...tajAnCir(),
+              ],
+            ),
+            // نمایش دکمه واگذاری ست فقط وقتی هر دو تیم حداقل یک دست برده باشند
+
             SizedBox(height: 6),
             Center(
               child: controller.playerCards['bottom']?.isNotEmpty ?? false
@@ -1001,6 +1114,70 @@ class GameScreen extends StatelessWidget {
           ],
         );
       },
+    );
+  }
+
+  /// دیالوگ bottom sheet تایید واگذاری ست
+  Widget _buildGiveUpSetSheet(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black26,
+            blurRadius: 16,
+            offset: Offset(0, -4),
+          ),
+        ],
+      ),
+      padding: EdgeInsets.fromLTRB(
+          24, 24, 24, 32 + MediaQuery.of(context).viewInsets.bottom),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(Icons.warning_amber_rounded, color: Colors.orange, size: 48),
+          SizedBox(height: 16),
+          Text(
+            'آیا مطمئن هستید که می‌خواهید این ست را واگذار کنید؟',
+            style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: Colors.black87),
+            textAlign: TextAlign.center,
+          ),
+          SizedBox(height: 24),
+          Row(
+            children: [
+              Expanded(
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.redAccent,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12)),
+                  ),
+                  onPressed: () => Navigator.of(context).pop(true),
+                  child: Text('بله، واگذار کن'),
+                ),
+              ),
+              SizedBox(width: 16),
+              Expanded(
+                child: OutlinedButton(
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: Colors.black87,
+                    side: BorderSide(color: Colors.grey.shade400),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12)),
+                  ),
+                  onPressed: () => Navigator.of(context).pop(false),
+                  child: Text('خیر، منصرف شدم'),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
     );
   }
 }

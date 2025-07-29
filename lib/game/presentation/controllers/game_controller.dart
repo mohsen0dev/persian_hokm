@@ -18,56 +18,118 @@ import 'package:persian_hokm/game/core/game_state_manager.dart';
 import 'package:persian_hokm/game/core/card_manager.dart';
 import 'package:persian_hokm/game/core/turn_manager.dart';
 import 'package:persian_hokm/game/core/game_utils.dart';
+import 'package:persian_hokm/game/presentation/pages/game_screen.dart';
 
 /// کنترلر اصلی بازی حکم
 class GameController extends GetxController {
+  /// کارت‌های بازی
   final cards = <GameCard>[].obs;
+
+  /// اندیس کارت جاری
   final currentCardIndex = 0.obs;
+
+  /// نمایش تیغه و دایره
   final showTajAndCircle = false.obs;
+
+  /// نمایش کارت‌ها
   final showCards = false.obs;
+
+  /// نمایش دکمه شروع
   final showStartButton = true.obs;
+
+  /// موقعیت کارت‌ها
   final cardPositions = {
     'left': 0.0.obs,
     'right': 0.0.obs,
     'top': 0.0.obs,
   }.obs;
+
+  /// کارت‌های بازیکنان
   final playerCards = {
     'bottom': <GameCard>[].obs,
     'right': <GameCard>[].obs,
     'top': <GameCard>[].obs,
     'left': <GameCard>[].obs,
   }.obs;
+
+  /// بازیکن حاکم
   final Rxn<String> hokmPlayer = Rxn<String>();
+
+  /// توزیع
   final isDistributing = false.obs;
+
+  /// خال حکم
   final selectedHokm = Rxn<Suit>();
+
+  /// نمایش دیالوگ حاکم
   final showHokmDialog = false.obs;
+
+  /// توزیع اول
   final isFirstDistributionDone = false.obs;
+
+  /// توزیع دوم
   final isSecondDistributionDone = false.obs;
+
+  /// توزیع سوم
   final isThirdDistributionDone = false.obs;
+
+  /// بازیکن جاری
   final currentPlayer = ''.obs;
+
+  /// کارت‌های روی میز
   final tableCards = <String, GameCard>{}.obs;
+
+  /// نوبت بازیکن پایین
   final isBottomPlayerTurn = false.obs;
+
+  /// شروع بازی
   final isGameStarted = false.obs;
+
+  /// امتیازات تیم‌ها
   final teamScores = {
     'team1': 0.obs,
     'team2': 0.obs,
   }.obs;
+
+  /// خال اول
   final firstSuit = Rxn<Suit>();
+
+  /// بازی
   late GameLogic game;
+
+  /// انیمیشن کارت‌ها
   final animatedCards = <dynamic>[].obs;
+
+  /// کارت‌های بازی‌شده
   final animatedPlayedCards = <dynamic>[].obs;
+
+  /// تعداد دست‌های برده تیم‌ها
   final teamSets = {
     'team1': 0.obs,
     'team2': 0.obs,
   }.obs;
+
+  /// دست‌های برده تیم 1
   final team1WonHands = <int>[].obs;
+
+  /// دست‌های برده تیم 2
   final team2WonHands = <int>[].obs;
   BuildContext get context => Get.context!;
   final SoundManager soundManager = SoundManager();
+
+  /// جهت حاکم جاری
   Direction? currentHakemDir;
+
+  /// اولین بازی
   bool isFirstGame = true;
+
+  /// فعال بودن بازی
   bool _isActive = true;
+
+  /// مدیر امتیازات
   late final GameScoreManager scoreManager;
+
+  /// توزیع کارت
   late final CardDistributor cardDistributor;
 
   /// مقداردهی اولیه کنترلر و بازی (اکنون با GameStateManager)
@@ -102,7 +164,8 @@ class GameController extends GetxController {
       team2WonHands: team2WonHands,
     );
     cardDistributor = CardDistributor(soundManager: soundManager);
-    // هماهنگ‌سازی فعال بودن صدا با تنظیمات
+
+    /// هماهنگ‌سازی فعال بودن صدا با تنظیمات
     final settings = Get.find<SettingsController>();
     soundManager.enabled = settings.soundEnabled.value;
     ever(settings.soundEnabled, (val) {
@@ -404,7 +467,8 @@ class GameController extends GetxController {
 
   /// مدیریت پایان یک ست و شروع ست جدید
   void _endSet() {
-    String winningTeam = scoreManager.finishSet();
+    String winningTeam =
+        scoreManager.finishSet(currentHakemDir: currentHakemDir!);
     // پاک کردن lastPartnerSuit برای همه بازیکنان در پایان ست
     if (game.players.length == 4) {
       for (final player in game.players) {
@@ -440,13 +504,22 @@ class GameController extends GetxController {
 
   /// مدیریت پایان کامل بازی و نمایش برنده
   void _endGame() {
+    // نمایش فشفشه و پخش آهنگ برنده نهایی
+    final gameScreen = Get.put(GameScreen());
+    gameScreen.showWinnerCelebration();
     final winningTeam = scoreManager.getFinalWinner();
     final winningTeamName = winningTeam == 'team1' ? 'شما ' : 'حریف ';
-    final endText = winningTeam == 'team1' ? 'شدید 😍✌️' : 'شد 😒😒';
+    final endText = winningTeam == 'team1' ? 'شدید 😍✌️' : 'شد!!! 😒😒';
     final Color textColor = winningTeam == 'team1' ? Colors.green : Colors.red;
+    // پخش صدای مناسب برنده یا بازنده
+    if (winningTeam == 'team1') {
+      soundManager.play('success.mp3');
+    } else {
+      soundManager.play('lose.mp3');
+    }
     UIHelper.showEndGameDialog(
       context,
-      '$winningTeamName برنده نهایی $endText!',
+      '$winningTeamName برنده نهایی $endText',
       textColor,
     );
   }
@@ -563,4 +636,18 @@ class GameController extends GetxController {
 
   /// آیا در مرحله توزیع کارت برای تعیین حاکم هستیم؟
   bool get isDistributingForHakem => hokmPlayer.value != '';
+
+  /// واگذاری ست توسط بازیکن (public)
+  void giveUpSet() {
+    // ریست کردن وضعیت بازی قبل از واگذاری ست
+    tableCards.clear();
+    animatedPlayedCards.clear();
+    firstSuit.value = null;
+    currentPlayer.value = '';
+    isBottomPlayerTurn.value = false;
+    isGameStarted.value = false;
+
+    // واگذاری ست
+    _endSet();
+  }
 }

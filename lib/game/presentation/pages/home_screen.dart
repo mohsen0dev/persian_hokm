@@ -5,6 +5,7 @@ import 'package:get/get.dart';
 import 'package:persian_hokm/game/presentation/pages/abute_me.dart';
 import 'package:persian_hokm/game/presentation/pages/game_screen.dart';
 import 'package:persian_hokm/game/presentation/pages/settings_screen.dart';
+import 'package:persian_hokm/game/presentation/widgets/card_list_ittems.dart';
 import 'package:persian_hokm/game/presentation/widgets/screen_size_guard.dart';
 
 class HomeScreen extends StatelessWidget {
@@ -18,20 +19,18 @@ class HomeScreen extends StatelessWidget {
       mainAxisAlignment: MainAxisAlignment.center,
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        cardListItems(
-            context,
-            'شروع بازی',
-            () => Get.to(
+        CardListItem(
+            text: 'شروع بازی',
+            onTap: () => Get.to(
                 transition: Transition.leftToRight,
                 duration: const Duration(milliseconds: 600),
                 () => (GameScreen())),
             icon: Icons.play_circle_outline_outlined,
             color: Colors.greenAccent.shade400,
             dark: true),
-        cardListItems(
-          context,
-          'تنظیمات بازی',
-          () => Get.to(
+        CardListItem(
+          text: 'تنظیمات بازی',
+          onTap: () => Get.to(
             transition: Transition.leftToRight,
             duration: const Duration(milliseconds: 600),
             () => SettingsScreen(),
@@ -40,10 +39,9 @@ class HomeScreen extends StatelessWidget {
           color: Colors.blueAccent.shade100,
           dark: true,
         ),
-        cardListItems(
-            context,
-            'درباره ما',
-            () => Get.to(
+        CardListItem(
+            text: 'درباره ما',
+            onTap: () => Get.to(
                     transition: Transition.leftToRight,
                     duration: const Duration(milliseconds: 600), () {
                   return AbuteMeScreen();
@@ -51,8 +49,10 @@ class HomeScreen extends StatelessWidget {
             icon: Icons.info_outline_rounded,
             color: Colors.orangeAccent.shade200,
             dark: true),
-        cardListItems(context, 'نسخه بتا 0.0.1', null,
-            color: Colors.purpleAccent.shade100, dark: true),
+        CardListItem(
+            text: 'نسخه بتا 0.0.1',
+            color: Colors.purpleAccent.shade100,
+            dark: true),
       ],
     );
     return PopScope(
@@ -216,69 +216,6 @@ class HomeScreen extends StatelessWidget {
                       ],
                     ),
                   ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget cardListItems(BuildContext context, String text, Function? onTap,
-      {IconData? icon, required Color color, bool dark = false}) {
-    return Center(
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 1000),
-        curve: Curves.easeInOut,
-        width: (MediaQuery.of(context).size.width * 0.03) + 220,
-        height: 60,
-        margin: const EdgeInsets.symmetric(vertical: 10),
-        decoration: BoxDecoration(
-          color: dark
-              ? const Color(0xFF232526).withOpacity(0.92)
-              : Colors.white.withOpacity(0.85),
-          borderRadius: BorderRadius.circular(18),
-          boxShadow: [
-            BoxShadow(
-              color: color.withOpacity(0.18),
-              blurRadius: 12,
-              offset: const Offset(0, 6),
-            ),
-          ],
-          border: Border.all(
-            color: color,
-            width: 1.2,
-          ),
-        ),
-        child: Material(
-          color: Colors.transparent,
-          child: InkWell(
-            borderRadius: BorderRadius.circular(18),
-            splashColor: color.withOpacity(0.3),
-            highlightColor: color.withOpacity(0.1),
-            onTap: onTap != null ? () => onTap() : null,
-            child: Padding(
-              padding: EdgeInsets.only(left: 15, right: 8),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  icon == null
-                      ? const SizedBox()
-                      : Icon(Icons.arrow_back_ios_new_rounded,
-                          size: 16, color: color),
-                  Text(
-                    text,
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w600,
-                      color: color,
-                      fontFamily: 'Vazirmatn',
-                    ),
-                  ),
-                  icon == null
-                      ? const SizedBox()
-                      : Icon(icon, color: color, size: 30),
-                ],
-              ),
-            ),
           ),
         ),
       ),

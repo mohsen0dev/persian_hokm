@@ -7,18 +7,41 @@ import 'package:persian_hokm/game/models/team.dart';
 
 /// کلاس اصلی منطق بازی حکم
 class GameLogic {
+  /// دست کارت‌ها
   late List<GameCard> deck;
+
+  /// حاکم
   late Direction hakem;
+
+  /// جهت میز
   late Direction tableDir;
+
+  /// حکم
   late Suit hokm;
+
+  /// جهت حاکم
   Direction directionHakemDetermination = Direction.bottom;
+
+  /// دست‌های بازیکنان
   List<List<GameCard>> hands = List.generate(4, (_) => []);
+
+  /// بازیکنان
   List<Player> players = [];
+
+  /// تیم‌ها
   List<Team> teams = [];
+
+  /// کارت‌های روی میز
   List<GameCard> table = [];
+
+  /// تاریخچه کارت‌های روی میز
   List<List<GameCard>> tableHistory = [];
+
+  /// آخرین اندیس کارت
   int lastIndex = 52;
-  late Direction starterDirection; // جهت شروع‌کننده هر دست
+
+  /// جهت شروع‌کننده هر دست
+  late Direction starterDirection;
 
   GameLogic() {
     newGame();
@@ -35,7 +58,8 @@ class GameLogic {
     tableHistory.clear();
     deck = _getNewDeck();
     lastIndex = deck.length;
-    // مقداردهی اولیه starterDirection (در صورت نیاز)
+
+    /// مقداردهی اولیه starterDirection (در صورت نیاز)
     starterDirection = Direction.bottom;
   }
 
@@ -67,7 +91,9 @@ class GameLogic {
     }
     hakem = directionHakemDetermination;
     tableDir = directionHakemDetermination;
-    starterDirection = directionHakemDetermination; // مقداردهی اولیه
+
+    /// مقداردهی اولیه
+    starterDirection = directionHakemDetermination;
     deck = _getNewDeck();
     lastIndex = deck.length;
   }
@@ -101,7 +127,8 @@ class GameLogic {
       lastIndex -= numCards;
       dir = _getNextDirection(dir);
     }
-    // ساخت بازیکنان و تیم‌ها فقط در اولین تقسیم کارت
+
+    /// ساخت بازیکنان و تیم‌ها فقط در اولین تقسیم کارت
     if (numCards == 5 && players.isEmpty) {
       final aiLevel = Get.find<SettingsController>().aiLevel.value;
       players = [
@@ -161,23 +188,29 @@ class GameLogic {
       final winner = getTableWinner(table, hokm, teams);
       winner.team.score++;
       tableDir = winner.direction;
-      starterDirection = winner.direction; // مقداردهی جهت شروع‌کننده دست بعدی
+
+      /// مقداردهی جهت شروع‌کننده دست بعدی
+      starterDirection = winner.direction;
       tableHistory.add(List.from(table));
-      // به‌روزرسانی آخرین خال بازی‌شده توسط یار برای هر بازیکن
+
+      /// به‌روزرسانی آخرین خال بازی‌شده توسط یار برای هر بازیکن
       if (players.length == 4) {
         final lastHand = tableHistory.last;
         int starterIdx =
             players.indexWhere((p) => p.direction == starterDirection);
         for (int i = 0; i < 4; i++) {
           final player = players[i];
-          // پیدا کردن یار (هم‌تیمی)
+
+          /// پیدا کردن یار (هم‌تیمی)
           final partner = player.team.playerA == player
               ? player.team.playerB
               : player.team.playerA;
-          // موقعیت یار در دست
+
+          /// موقعیت یار در دست
           int partnerOffset = players.indexOf(partner);
           final partnerCard = lastHand[partnerOffset];
-          // فقط اگر یار نفر اول دست قبلی بوده
+
+          /// فقط اگر یار نفر اول دست قبلی بوده
           if (partnerOffset == starterIdx) {
             player.updateLastPartnerSuit(partnerCard.suit);
           }
@@ -189,16 +222,16 @@ class GameLogic {
 
 //! بازیکن برنده
   Player getTableWinner(List<GameCard> table, Suit hokm, List<Team> teams) {
-    // اگر همه کارت‌ها هم‌خال باشند
+    /// اگر همه کارت‌ها هم‌خال باشند
     if (table.every((c) => c.suit == table[0].suit)) {
       return _getWinner(table);
     } else {
-      // اگر حکم داری
+      /// اگر حکم داری
       final hokmCards = table.where((c) => c.suit == hokm).toList();
       if (hokmCards.isNotEmpty) {
         return _getWinner(hokmCards);
       } else {
-        // اگر حکم نداری
+        /// اگر حکم نداری
         final sameSuitAsFirst =
             table.where((c) => c.suit == table[0].suit).toList();
         return _getWinner(sameSuitAsFirst);
@@ -208,7 +241,7 @@ class GameLogic {
 
 //! بازیکن برنده
   Player _getWinner(List<GameCard> cards) {
-    // کارت با بالاترین ارزش (index کمتر یعنی ارزش بیشتر)
+    /// کارت با بالاترین ارزش (index کمتر یعنی ارزش بیشتر)
     GameCard winnerCard = cards.first;
     for (var card in cards) {
       if (card.rank.index < winnerCard.rank.index) {
