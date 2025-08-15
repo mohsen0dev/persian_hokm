@@ -660,7 +660,7 @@ class GameController extends GetxController {
     _syncHandsWithUI();
     playerCards['bottom'];
     bool isCut = _isCardCutWithTable(card, tableBefore, game.hokm);
-    soundManager.play(isCut ? 'boresh.mp3' : 'select.wav');
+    soundManager.play(isCut ? 'boresh.mp3' : 'select.mp3');
     final animData = PlayedAnimatedCard(
       card: card,
       fromPosition: currentPlayer.value,
