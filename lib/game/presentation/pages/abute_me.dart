@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:persian_hokm/game/presentation/utils/ui_helper.dart';
 import 'package:persian_hokm/game/presentation/widgets/screen_size_guard.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -29,7 +30,7 @@ class AbuteMeScreen extends StatelessWidget {
         ),
         const SizedBox(height: 18),
         Text(
-          'بازی حکم ایرانی',
+          'بازی آس حکم',
           style: TextStyle(
             fontSize: 22,
             fontWeight: FontWeight.bold,
@@ -45,7 +46,7 @@ class AbuteMeScreen extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 8),
-        Text('نسخه 1.0.0',
+        Text('نسخه ${UIHelper.version}',
             style: TextStyle(
                 color: Colors.white70, fontFamily: 'Vazirmatn', fontSize: 15)),
       ],
