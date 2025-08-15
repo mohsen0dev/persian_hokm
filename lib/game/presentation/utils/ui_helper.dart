@@ -4,6 +4,8 @@ import 'package:get/get.dart';
 
 /// ابزارهای کمکی برای نمایش پیام‌ها و دیالوگ‌ها
 class UIHelper {
+  static String version = '1.0.3';
+
   /// نمایش پیام کوتاه (SnackBar)
   static void showSnackBar(BuildContext context, String message) {
     ScaffoldMessenger.of(context).showSnackBar(

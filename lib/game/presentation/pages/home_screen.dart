@@ -5,6 +5,7 @@ import 'package:get/get.dart';
 import 'package:persian_hokm/game/presentation/pages/abute_me.dart';
 import 'package:persian_hokm/game/presentation/pages/game_screen.dart';
 import 'package:persian_hokm/game/presentation/pages/settings_screen.dart';
+import 'package:persian_hokm/game/presentation/utils/ui_helper.dart';
 import 'package:persian_hokm/game/presentation/widgets/card_list_ittems.dart';
 import 'package:persian_hokm/game/presentation/widgets/screen_size_guard.dart';
 
@@ -50,7 +51,7 @@ class HomeScreen extends StatelessWidget {
             color: Colors.orangeAccent.shade200,
             dark: true),
         CardListItem(
-            text: 'نسخه 1.0.3',
+            text: 'نسخه ${UIHelper.version}',
             color: Colors.purpleAccent.shade100,
             dark: true),
       ],
