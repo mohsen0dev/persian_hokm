@@ -77885,7 +77885,7 @@ J.W(o.gi(0),o.$ti.c.a("bottom"))
 p=j.p2.d
 p===$&&A.b()
 m=j.a2V(a,q,p)
-p=m?"boresh.mp3":"select.wav"
+p=m?"boresh.mp3":"select.mp3"
 j.ry.dW(0,p)
 l=A.aM5(a,r.gi(0),m,null)
 p=j.p4
