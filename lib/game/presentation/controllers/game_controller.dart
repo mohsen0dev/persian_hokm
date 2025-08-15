@@ -202,11 +202,11 @@ class GameController extends GetxController {
 
   /// شروع بازی و تعیین حاکم
   void startGame() async {
-    UIHelper.showSnackBar(context, 'انتخاب حاکم');
     showStartButton.value = false;
     showCards.value = true;
     isGameStarted.value = false;
     if (isFirstGame) {
+      UIHelper.showSnackBar(context, 'انتخاب حاکم');
       await _distributeCardsForHakem();
       isFirstGame = false;
     } else {
@@ -226,6 +226,8 @@ class GameController extends GetxController {
     currentHakemDir = hakemDir;
     hokmPlayer.value = _directionToString(hakemDir);
     game.hakem = hakemDir;
+    UIHelper.showSnackBar(
+        context, '${getPlayerName(hokmPlayer.value!)} حاکم شد');
     final newDeck = game.getNewDeck();
     newDeck.shuffle(Random());
     cards.clear();
@@ -467,8 +469,46 @@ class GameController extends GetxController {
 
   /// مدیریت پایان یک ست و شروع ست جدید
   void _endSet() {
+    // ذخیره امتیازات قبل از پایان ست برای تشخیص نوع برد
+    final team1ScoreBefore = teamScores['team1']?.value ?? 0;
+    final team2ScoreBefore = teamScores['team2']?.value ?? 0;
+
     String winningTeam =
         scoreManager.finishSet(currentHakemDir: currentHakemDir!);
+
+    // تشخیص نوع برد
+    bool isKod = false;
+    bool isHakemKod = false;
+    int pointsEarned = 1;
+
+    if (winningTeam == 'team1') {
+      if (team2ScoreBefore == 0) {
+        isKod = true;
+        bool hakemIsTeam1 = (currentHakemDir == Direction.bottom ||
+            currentHakemDir == Direction.top);
+        if (hakemIsTeam1) {
+          final gameScreen = Get.put(GameScreen());
+          gameScreen.showWinnerCelebration();
+          isHakemKod = true;
+          pointsEarned = 3;
+        } else {
+          pointsEarned = 2;
+        }
+      }
+    } else {
+      if (team1ScoreBefore == 0) {
+        isKod = true;
+        bool hakemIsTeam1 = (currentHakemDir == Direction.bottom ||
+            currentHakemDir == Direction.top);
+        if (!hakemIsTeam1) {
+          isHakemKod = true;
+          pointsEarned = 3;
+        } else {
+          pointsEarned = 2;
+        }
+      }
+    }
+
     // پاک کردن lastPartnerSuit برای همه بازیکنان در پایان ست
     if (game.players.length == 4) {
       for (final player in game.players) {
@@ -488,17 +528,37 @@ class GameController extends GetxController {
       _endGame();
       return;
     }
-    final Color textColor = winningTeam == 'team1' ? Colors.green : Colors.red;
+
+    // تغییر: اگر context وجود نداشت (در تست)، فقط ادامه بده
+    if (Get.context == null) {
+      _initializeCards();
+      startGame();
+      return;
+    }
+
+    // پخش صدای مناسب بر اساس نوع برد
+    if (winningTeam == 'team1') {
+      if (isHakemKod) {
+        soundManager.play('success.mp3'); // برای حاکم کد صدای هیجان‌انگیز
+      } else if (isKod) {
+        soundManager.play('success.mp3'); // برای کد صدای موفقیت
+      } else {
+        soundManager.play('success.mp3'); // برای برد معمولی
+      }
+    } else {
+      soundManager.play('lose.mp3'); // برای باخت
+    }
+
     UIHelper.showEndSetDialog(
       context,
-      winningTeam == 'team1'
-          ? 'شما این ست را بردید! ☺️'
-          : 'حریف این ست را برد! 😔',
+      winningTeam,
+      isKod,
+      isHakemKod,
+      pointsEarned,
       () {
         _initializeCards();
         startGame();
       },
-      textColor,
     );
   }
 
@@ -508,18 +568,27 @@ class GameController extends GetxController {
     final gameScreen = Get.put(GameScreen());
     gameScreen.showWinnerCelebration();
     final winningTeam = scoreManager.getFinalWinner();
-    final winningTeamName = winningTeam == 'team1' ? 'شما ' : 'حریف ';
-    final endText = winningTeam == 'team1' ? 'شدید 😍✌️' : 'شد!!! 😒😒';
     final Color textColor = winningTeam == 'team1' ? Colors.green : Colors.red;
+
+    String message;
+    if (winningTeam == 'team1') {
+      message =
+          '🎉 شما برنده نهایی شدید! 🎉\n\n🔥 عالی بازی کردید! 🔥\n\n🏆 تبریک! 🏆';
+    } else {
+      message =
+          '😔 حریف برنده نهایی شد! 😔\n\n💪 دفعه بعد بهتر بازی کنید! 💪\n\n😤 ناامید نشوید! 😤';
+    }
+
     // پخش صدای مناسب برنده یا بازنده
     if (winningTeam == 'team1') {
       soundManager.play('success.mp3');
     } else {
       soundManager.play('lose.mp3');
     }
+
     UIHelper.showEndGameDialog(
       context,
-      '$winningTeamName برنده نهایی $endText',
+      message,
       textColor,
     );
   }
@@ -637,16 +706,14 @@ class GameController extends GetxController {
   /// آیا در مرحله توزیع کارت برای تعیین حاکم هستیم؟
   bool get isDistributingForHakem => hokmPlayer.value != '';
 
-  /// واگذاری ست توسط بازیکن (public)
+  /// واگذاری ست توسط بازیکن
   void giveUpSet() {
     // ریست کردن وضعیت بازی قبل از واگذاری ست
     tableCards.clear();
     animatedPlayedCards.clear();
-    firstSuit.value = null;
-    currentPlayer.value = '';
     isBottomPlayerTurn.value = false;
-    isGameStarted.value = false;
-
+    animatedPlayedCards.clear;
+    game.table.clear();
     // واگذاری ست
     _endSet();
   }

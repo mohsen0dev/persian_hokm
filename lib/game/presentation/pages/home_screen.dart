@@ -50,7 +50,7 @@ class HomeScreen extends StatelessWidget {
             color: Colors.orangeAccent.shade200,
             dark: true),
         CardListItem(
-            text: 'نسخه بتا 0.0.1',
+            text: 'نسخه 1.0.3',
             color: Colors.purpleAccent.shade100,
             dark: true),
       ],

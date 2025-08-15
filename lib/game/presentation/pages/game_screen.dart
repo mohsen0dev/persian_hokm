@@ -3,10 +3,8 @@ import 'package:get/get.dart';
 
 import 'package:persian_hokm/game/models/card.dart';
 import 'package:persian_hokm/game/presentation/controllers/game_controller.dart';
-import 'package:persian_hokm/game/presentation/pages/home_screen.dart';
 import 'package:persian_hokm/game/presentation/pages/settings_screen.dart';
 import 'package:persian_hokm/game/presentation/widgets/animated_card.dart';
-import 'package:persian_hokm/game/presentation/widgets/card_list_ittems.dart';
 import 'package:persian_hokm/game/presentation/widgets/card_widget.dart';
 import 'package:persian_hokm/game/presentation/widgets/played_animated_card.dart';
 import 'package:persian_hokm/game/presentation/widgets/screen_size_guard.dart';
@@ -880,7 +878,7 @@ class GameScreen extends StatelessWidget {
                     ? SizedBox(
                         height:
                             (controller.playerCards['right']!.length * 20) + 86,
-                        width: 66,
+                        width: 70,
                         child: Stack(
                           alignment: Alignment.center,
                           children: [
