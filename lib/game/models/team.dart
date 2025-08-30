@@ -1,4 +1,4 @@
-import 'package:persian_hokm/game/models/player.dart'; // Will be created/updated
+import 'package:as_hokme/game/models/player.dart'; // Will be created/updated
 
 /// تیم (دو بازیکن)
 class Team {

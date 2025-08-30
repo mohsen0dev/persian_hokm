@@ -1,7 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:persian_hokm/game/models/player.dart';
-import 'package:persian_hokm/game/models/card.dart';
-import 'package:persian_hokm/game/models/enums.dart';
+import 'package:as_hokme/game/models/player.dart';
+import 'package:as_hokme/game/models/card.dart';
+import 'package:as_hokme/game/models/enums.dart';
 
 void main() {
   group('تست منطق نفر چهارم (fourth player logic)', () {

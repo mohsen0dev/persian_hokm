@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
-import 'package:persian_hokm/game/presentation/widgets/screen_size_guard.dart';
+import 'package:as_hokme/game/presentation/widgets/screen_size_guard.dart';
 
 class SettingsController extends GetxController {
   final box = GetStorage();
@@ -9,6 +9,8 @@ class SettingsController extends GetxController {
   final animationSpeed = 1.obs;
   // هوش مصنوعی: 0=مبتدی، 1=معمولی، 2=حرفه‌ای
   final aiLevel = 2.obs;
+  // نحوه پخش کارت‌ها: false=تک‌تک، true=گروهی
+  final dealGrouped = false.obs;
   // پس‌زمینه: 0=مشکی، 1=سفید، 2=خاکستری، 3-6=عکس
   final backgroundIndex = 0.obs;
   // طرح پشت کارت: 0=قرمز، 1=آبی، 2=سبز، 3-6=عکس
@@ -40,6 +42,7 @@ class SettingsController extends GetxController {
     super.onInit();
     animationSpeed.value = box.read('animationSpeed') ?? 1;
     aiLevel.value = box.read('aiLevel') ?? 2;
+    dealGrouped.value = box.read('dealGrouped') ?? false;
     backgroundIndex.value = box.read('backgroundIndex') ?? 0;
     cardBackIndex.value = box.read('cardBackIndex') ?? 3;
     soundEnabled.value = box.read('soundEnabled') ?? true;
@@ -48,6 +51,7 @@ class SettingsController extends GetxController {
   void saveSettings() async {
     await box.write('animationSpeed', animationSpeed.value);
     await box.write('aiLevel', aiLevel.value);
+    await box.write('dealGrouped', dealGrouped.value);
     await box.write('backgroundIndex', backgroundIndex.value);
     await box.write('cardBackIndex', cardBackIndex.value);
     await box.write('soundEnabled', soundEnabled.value);
@@ -56,6 +60,7 @@ class SettingsController extends GetxController {
   void resetSettings() async {
     animationSpeed.value = 1;
     aiLevel.value = 2;
+    dealGrouped.value = false;
     backgroundIndex.value = 0;
     cardBackIndex.value = 3;
     soundEnabled.value = true;
@@ -142,6 +147,10 @@ class SettingsScreen extends StatelessWidget {
                           _buildAnimationSpeedChips(),
                         ]),
                         _settingsCard([
+                          _sectionTitle('نحوه پخش کارت‌ها'),
+                          _buildDealModeChips(),
+                        ]),
+                        _settingsCard([
                           _sectionTitle('هوش مصنوعی حریفان'),
                           _buildAILevelChips(),
                         ]),
@@ -178,6 +187,12 @@ class SettingsScreen extends StatelessWidget {
                             _sectionTitle('سرعت پخش کارت‌ها'),
                             SizedBox(height: 14),
                             _buildAnimationSpeedChips(),
+                            SizedBox(height: 14),
+                          ]),
+                          _settingsCard([
+                            _sectionTitle('نحوه پخش کارت‌ها'),
+                            SizedBox(height: 14),
+                            _buildDealModeChips(),
                             SizedBox(height: 14),
                           ]),
                           _settingsCard([
@@ -303,6 +318,35 @@ class SettingsScreen extends StatelessWidget {
             selectedColor: Colors.purple.shade200,
           ),
         ),
+      ),
+    );
+  }
+
+  /// انتخاب نحوه پخش کارت‌ها (تک‌تک/گروهی)
+  Widget _buildDealModeChips() {
+    return Center(
+      child: Wrap(
+        alignment: WrapAlignment.center,
+        spacing: 8,
+        runSpacing: 8,
+        children: [
+          ChoiceChip(
+            label: const Text('تک تک'),
+            selected: settingsController.dealGrouped.value == false,
+            onSelected: (selected) {
+              if (selected) settingsController.dealGrouped.value = false;
+            },
+            selectedColor: Colors.purple.shade200,
+          ),
+          ChoiceChip(
+            label: const Text('گروهی'),
+            selected: settingsController.dealGrouped.value == true,
+            onSelected: (selected) {
+              if (selected) settingsController.dealGrouped.value = true;
+            },
+            selectedColor: Colors.purple.shade200,
+          ),
+        ],
       ),
     );
   }

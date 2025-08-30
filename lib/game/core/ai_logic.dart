@@ -1,6 +1,6 @@
-import 'package:persian_hokm/game/models/enums.dart';
-import 'package:persian_hokm/game/models/card.dart';
-import 'package:persian_hokm/game/models/player.dart';
+import 'package:as_hokme/game/models/enums.dart';
+import 'package:as_hokme/game/models/card.dart';
+import 'package:as_hokme/game/models/player.dart';
 
 /// بررسی اینکه آیا کارت داده شده قوی‌ترین کارت باقی‌مانده از آن خال است یا نه
 bool isStrongestCard(GameCard card, List<GameCard> playedCards) {

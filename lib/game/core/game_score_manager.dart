@@ -1,5 +1,5 @@
 import 'package:get/get.dart';
-import 'package:persian_hokm/game/models/enums.dart';
+import 'package:as_hokme/game/models/enums.dart';
 
 /// مدیریت امتیازدهی و پایان ست/بازی
 class GameScoreManager {

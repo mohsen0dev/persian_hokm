@@ -2,12 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 
-import 'package:persian_hokm/game/presentation/pages/abute_me.dart';
-import 'package:persian_hokm/game/presentation/pages/game_screen.dart';
-import 'package:persian_hokm/game/presentation/pages/settings_screen.dart';
-import 'package:persian_hokm/game/presentation/utils/ui_helper.dart';
-import 'package:persian_hokm/game/presentation/widgets/card_list_ittems.dart';
-import 'package:persian_hokm/game/presentation/widgets/screen_size_guard.dart';
+import 'package:as_hokme/game/presentation/pages/abute_me.dart';
+import 'package:as_hokme/game/presentation/pages/game_screen.dart';
+import 'package:as_hokme/game/presentation/pages/settings_screen.dart';
+import 'package:as_hokme/game/presentation/utils/ui_helper.dart';
+import 'package:as_hokme/game/presentation/widgets/card_list_ittems.dart';
+import 'package:as_hokme/game/presentation/widgets/screen_size_guard.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
