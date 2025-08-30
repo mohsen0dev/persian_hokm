@@ -90,12 +90,12 @@ BEGIN
         BLOCK "040904e4"
         BEGIN
             VALUE "CompanyName", "Faraji" "\0"
-            VALUE "FileDescription", "آس حکم" "\0"
+            VALUE "FileDescription", "As Hokme" "\0"
             VALUE "FileVersion", VERSION_AS_STRING "\0"
-            VALUE "InternalName", "آس حکم" "\0"
+            VALUE "InternalName", "As Hokme" "\0"
             VALUE "LegalCopyright", "Copyright (C) 2025 Mohsen Faraji All rights reserved." "\0"
-            VALUE "OriginalFilename", "آس حکم.exe" "\0"
-            VALUE "ProductName", "آس حکم" "\0"
+            VALUE "OriginalFilename", "As Hokme.exe" "\0"
+            VALUE "ProductName", "As Hokme" "\0"
             VALUE "ProductVersion", VERSION_AS_STRING "\0"
         END
     END

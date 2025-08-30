@@ -198,7 +198,7 @@ class UIHelper {
   /// نمایش دیالوگ پایان بازی با طراحی زیبا
   static Future<void> showEndGameDialog(
       BuildContext context, String message, Color? txtClr) async {
-    final gameScreenCntrl = Get.put(GameScreen());
+    // final gameScreenCntrl = Get.put(GameScreen());
 
     await Get.dialog(
       AlertDialog(
