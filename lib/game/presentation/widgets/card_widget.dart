@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:persian_hokm/game/models/card.dart';
+import 'package:as_hokme/game/models/card.dart';
 import 'package:get/get.dart';
-import 'package:persian_hokm/game/presentation/pages/settings_screen.dart';
+import 'package:as_hokme/game/presentation/pages/settings_screen.dart';
 
 class CardWidget extends StatelessWidget {
   final GameCard card;

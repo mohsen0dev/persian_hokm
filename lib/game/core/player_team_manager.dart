@@ -1,7 +1,7 @@
-import 'package:persian_hokm/game/models/enums.dart';
-import 'package:persian_hokm/game/models/player.dart';
-import 'package:persian_hokm/game/models/team.dart';
-import 'package:persian_hokm/game/models/card.dart';
+import 'package:as_hokme/game/models/enums.dart';
+import 'package:as_hokme/game/models/player.dart';
+import 'package:as_hokme/game/models/team.dart';
+import 'package:as_hokme/game/models/card.dart';
 
 /// مدیریت ساخت و مقداردهی اولیه بازیکنان و تیم‌ها
 class PlayerTeamManager {

@@ -1,5 +1,5 @@
 import 'package:get/get.dart';
-import 'package:persian_hokm/game/models/card.dart';
+import 'package:as_hokme/game/models/card.dart';
 
 /// مدیریت وضعیت‌های مختلف بازی
 class GameStateManager {

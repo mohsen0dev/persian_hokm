@@ -1,7 +1,7 @@
 import 'package:get/get.dart';
-import 'package:persian_hokm/game/models/enums.dart';
-import 'package:persian_hokm/game/models/card.dart';
-import 'package:persian_hokm/game/models/player.dart';
+import 'package:as_hokme/game/models/enums.dart';
+import 'package:as_hokme/game/models/card.dart';
+import 'package:as_hokme/game/models/player.dart';
 
 /// مدیریت کارت‌های بازیکنان و همگام‌سازی دست‌ها
 class CardManager {

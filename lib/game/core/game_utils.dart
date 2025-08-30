@@ -1,4 +1,4 @@
-import 'package:persian_hokm/game/models/enums.dart';
+import 'package:as_hokme/game/models/enums.dart';
 
 /// توابع کمکی بازی
 class GameUtils {

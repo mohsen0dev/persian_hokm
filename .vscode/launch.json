@@ -4,19 +4,20 @@
     // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
     "version": "0.2.0",
     "configurations": [
+        
         {
-            "name": "persian_hokm",
+            "name": "as_hokme",
             "request": "launch",
             "type": "dart"
         },
         {
-            "name": "persian_hokm (profile mode)",
+            "name": "as_hokme (profile mode)",
             "request": "launch",
             "type": "dart",
             "flutterMode": "profile"
         },
         {
-            "name": "persian_hokm (release mode)",
+            "name": "as_hokme (release mode)",
             "request": "launch",
             "type": "dart",
             "flutterMode": "release"

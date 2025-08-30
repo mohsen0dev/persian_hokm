@@ -1,8 +1,8 @@
 // ignore_for_file: avoid_print
-import 'package:persian_hokm/game/models/enums.dart';
-import 'package:persian_hokm/game/models/card.dart';
-import 'package:persian_hokm/game/models/team.dart'; // Will be created next
-import 'package:persian_hokm/game/core/ai_logic.dart'; // Will be created soon
+import 'package:as_hokme/game/models/enums.dart';
+import 'package:as_hokme/game/models/card.dart';
+import 'package:as_hokme/game/models/team.dart'; // Will be created next
+import 'package:as_hokme/game/core/ai_logic.dart'; // Will be created soon
 
 // -------------------- منطق بازی حکم (تبدیل شده از کاتلین) --------------------
 

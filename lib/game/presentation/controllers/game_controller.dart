@@ -4,21 +4,21 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
-import 'package:persian_hokm/game/core/game_logic.dart';
-import 'package:persian_hokm/game/models/enums.dart';
-import 'package:persian_hokm/game/models/card.dart';
-import 'package:persian_hokm/game/presentation/pages/settings_screen.dart';
-import 'package:persian_hokm/game/presentation/widgets/played_animated_card.dart';
-import 'package:persian_hokm/game/core/sound_manager.dart';
-import 'package:persian_hokm/game/presentation/utils/ui_helper.dart';
-import 'package:persian_hokm/game/core/game_score_manager.dart';
-import 'package:persian_hokm/game/core/card_distributor.dart';
-import 'package:persian_hokm/game/core/player_team_manager.dart';
-import 'package:persian_hokm/game/core/game_state_manager.dart';
-import 'package:persian_hokm/game/core/card_manager.dart';
-import 'package:persian_hokm/game/core/turn_manager.dart';
-import 'package:persian_hokm/game/core/game_utils.dart';
-import 'package:persian_hokm/game/presentation/pages/game_screen.dart';
+import 'package:as_hokme/game/core/game_logic.dart';
+import 'package:as_hokme/game/models/enums.dart';
+import 'package:as_hokme/game/models/card.dart';
+import 'package:as_hokme/game/presentation/pages/settings_screen.dart';
+import 'package:as_hokme/game/presentation/widgets/played_animated_card.dart';
+import 'package:as_hokme/game/core/sound_manager.dart';
+import 'package:as_hokme/game/presentation/utils/ui_helper.dart';
+import 'package:as_hokme/game/core/game_score_manager.dart';
+import 'package:as_hokme/game/core/card_distributor.dart';
+import 'package:as_hokme/game/core/player_team_manager.dart';
+import 'package:as_hokme/game/core/game_state_manager.dart';
+import 'package:as_hokme/game/core/card_manager.dart';
+import 'package:as_hokme/game/core/turn_manager.dart';
+import 'package:as_hokme/game/core/game_utils.dart';
+import 'package:as_hokme/game/presentation/pages/game_screen.dart';
 
 /// کنترلر اصلی بازی حکم
 class GameController extends GetxController {
@@ -136,6 +136,7 @@ class GameController extends GetxController {
   @override
   void onInit() {
     super.onInit();
+
     game = GameLogic();
     GameStateManager.initializeGameState(
       playerCards: playerCards,
@@ -179,6 +180,10 @@ class GameController extends GetxController {
     animatedPlayedCards.clear();
     firstSuit.value = null;
     cards.clear();
+    // جلوگیری از بازی در شروع ست جدید
+    isDistributing.value = false;
+    isBottomPlayerTurn.value = false;
+    currentPlayer.value = '';
     for (var list in playerCards.values) {
       list.clear();
     }
@@ -205,6 +210,10 @@ class GameController extends GetxController {
     showStartButton.value = false;
     showCards.value = true;
     isGameStarted.value = false;
+    // در شروع ست جدید اجازه بازی داده نشود تا پایان توزیع
+    isDistributing.value = true;
+    isBottomPlayerTurn.value = false;
+    currentPlayer.value = '';
     if (isFirstGame) {
       UIHelper.showSnackBar(context, 'انتخاب حاکم');
       await _distributeCardsForHakem();
@@ -223,6 +232,10 @@ class GameController extends GetxController {
     showStartButton.value = false;
     showCards.value = true;
     isGameStarted.value = false;
+    // ریست وضعیت نوبت و جلوگیری از بازی هنگام توزیع
+    isDistributing.value = true;
+    isBottomPlayerTurn.value = false;
+    currentPlayer.value = '';
     currentHakemDir = hakemDir;
     hokmPlayer.value = _directionToString(hakemDir);
     game.hakem = hakemDir;
@@ -289,6 +302,8 @@ class GameController extends GetxController {
     cardPositions['left']?.value = 0.0;
     cardPositions['right']?.value = 0.0;
     cardPositions['top']?.value = 0.0;
+    // شروع وضعیت توزیع برای تعیین حاکم
+    isDistributing.value = true;
     String? foundHakem = await cardDistributor.distributeCardsForHakem(
       cards: cards,
       playerCards: playerCards,
@@ -300,6 +315,8 @@ class GameController extends GetxController {
         UIHelper.showSnackBar(context, '${getPlayerName(hakem)} حاکم شد');
       },
     );
+    // پایان توزیع مرحله اول (تعیین حاکم)
+    isDistributing.value = false;
     if (foundHakem != null) {
       hokmPlayer.value = foundHakem;
       await Future.delayed(
@@ -356,18 +373,38 @@ class GameController extends GetxController {
   /// توزیع مرحله‌ای کارت‌ها به بازیکنان (اکنون با CardDistributor)
   Future<void> _dealCardsStepByStep(int numCards) async {
     final order = _getDistributionOrder(game.hakem);
-    await cardDistributor.dealCardsStepByStep(
-      numCards: numCards,
-      order: order,
-      deck: game.deck,
-      hands: game.hands,
-      players: game.players,
-      playerCards: playerCards,
-      cards: cards,
-      animatedCards: animatedCards,
-      update: update,
-    );
+    final settings = Get.find<SettingsController>();
+    final useGrouped = settings.dealGrouped.value;
+    // شروع وضعیت توزیع
+    isDistributing.value = true;
+    if (useGrouped) {
+      await cardDistributor.dealCardsInGroups(
+        numCards: numCards,
+        order: order,
+        deck: game.deck,
+        hands: game.hands,
+        players: game.players,
+        playerCards: playerCards,
+        cards: cards,
+        animatedCards: animatedCards,
+        update: update,
+      );
+    } else {
+      await cardDistributor.dealCardsStepByStep(
+        numCards: numCards,
+        order: order,
+        deck: game.deck,
+        hands: game.hands,
+        players: game.players,
+        playerCards: playerCards,
+        cards: cards,
+        animatedCards: animatedCards,
+        update: update,
+      );
+    }
     _syncHandsWithUI();
+    // پایان وضعیت توزیع در این مرحله
+    isDistributing.value = false;
   }
 
   /// تبدیل رشته موقعیت به جهت بازیکن
@@ -386,10 +423,16 @@ class GameController extends GetxController {
     showHokmDialog.value = false;
     isGameStarted.value = true;
     game.hokm = suit;
+    // جلوگیری از بازی تا اتمام توزیع 4+4 کارت
+    isDistributing.value = true;
     await _dealCardsStepByStep(4);
+    // حفظ وضعیت توزیع بین دو مرحله
+    isDistributing.value = true;
     await Future.delayed(
         Duration(milliseconds: (400 * animationSpeedFactor).toInt()));
     await _dealCardsStepByStep(4);
+    // اتمام توزیع کامل دست
+    isDistributing.value = false;
     _sortBottomPlayerCards();
     currentPlayer.value = hokmPlayer.value ?? '';
     isBottomPlayerTurn.value = (hokmPlayer.value ?? '') == 'bottom';
@@ -469,6 +512,8 @@ class GameController extends GetxController {
 
   /// مدیریت پایان یک ست و شروع ست جدید
   void _endSet() {
+    final gameScreenCntrl = Get.put(GameScreen());
+
     // ذخیره امتیازات قبل از پایان ست برای تشخیص نوع برد
     final team1ScoreBefore = teamScores['team1']?.value ?? 0;
     final team2ScoreBefore = teamScores['team2']?.value ?? 0;
@@ -484,9 +529,9 @@ class GameController extends GetxController {
     if (winningTeam == 'team1') {
       if (team2ScoreBefore == 0) {
         isKod = true;
-        bool hakemIsTeam1 = (currentHakemDir == Direction.bottom ||
-            currentHakemDir == Direction.top);
-        if (hakemIsTeam1) {
+        bool hakemIsTeam2 = (currentHakemDir == Direction.left ||
+            currentHakemDir == Direction.right);
+        if (hakemIsTeam2) {
           final gameScreen = Get.put(GameScreen());
           gameScreen.showWinnerCelebration();
           isHakemKod = true;
@@ -500,7 +545,7 @@ class GameController extends GetxController {
         isKod = true;
         bool hakemIsTeam1 = (currentHakemDir == Direction.bottom ||
             currentHakemDir == Direction.top);
-        if (!hakemIsTeam1) {
+        if (hakemIsTeam1) {
           isHakemKod = true;
           pointsEarned = 3;
         } else {
@@ -560,10 +605,11 @@ class GameController extends GetxController {
         startGame();
       },
     );
+    gameScreenCntrl.showWinnerCelebration();
   }
 
   /// مدیریت پایان کامل بازی و نمایش برنده
-  void _endGame() {
+  void _endGame() async {
     // نمایش فشفشه و پخش آهنگ برنده نهایی
     final gameScreen = Get.put(GameScreen());
     gameScreen.showWinnerCelebration();
@@ -641,7 +687,22 @@ class GameController extends GetxController {
 
   /// بازی کردن یک کارت توسط بازیکن یا هوش مصنوعی (کوچک‌سازی شده)
   void playCard(GameCard card) {
+    // جلوگیری از بازی هنگام توزیع کارت‌ها
+    if (isDistributing.value) {
+      UIHelper.showSnackBar(
+          context, 'تا پایان پخش کارت‌ها نمی‌توانید بازی کنید');
+      return;
+    }
+    // اگر کارت دیگر در دست بازیکن انسانی نیست، از تکرار حرکت جلوگیری کن
+    if (currentPlayer.value == 'bottom' &&
+        !playerCards['bottom']!.contains(card)) {
+      return;
+    }
     if (!canPlayCard(card)) return;
+    // به محض قبول حرکت انسانی، نوبت بازیکن پایین را false کن تا تاچ‌های بعدی نادیده گرفته شوند
+    if (currentPlayer.value == 'bottom') {
+      isBottomPlayerTurn.value = false;
+    }
     final dir = Direction.values
         .firstWhere((d) => _directionToString(d) == currentPlayer.value);
     final tableBefore = List<GameCard>.from(game.table);

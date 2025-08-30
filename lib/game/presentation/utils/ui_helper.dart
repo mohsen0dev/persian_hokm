@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:as_hokme/game/presentation/pages/game_screen.dart';
 
 /// ابزارهای کمکی برای نمایش پیام‌ها و دیالوگ‌ها
 class UIHelper {
@@ -37,7 +38,9 @@ class UIHelper {
     int pointsEarned,
     VoidCallback onContinue,
   ) async {
-    int secondsLeft = 4;
+    final gameScreenCntrl = Get.put(GameScreen());
+    gameScreenCntrl.showWinnerCelebration();
+    int secondsLeft = 10;
     Timer? timer;
 
     // تعیین پیام و رنگ بر اساس نوع برد
@@ -132,9 +135,10 @@ class UIHelper {
                   SizedBox(height: 16),
                   InkWell(
                     onTap: () {
-                      timer?.cancel();
-                      Get.back();
-                      onContinue();
+                      // timer?.cancel();
+                      // Get.back();
+                      // onContinue();
+                      gameScreenCntrl.showWinnerCelebration();
                     },
                     child: Container(
                       padding:
@@ -194,6 +198,8 @@ class UIHelper {
   /// نمایش دیالوگ پایان بازی با طراحی زیبا
   static Future<void> showEndGameDialog(
       BuildContext context, String message, Color? txtClr) async {
+    // final gameScreenCntrl = Get.put(GameScreen());
+
     await Get.dialog(
       AlertDialog(
         shape: RoundedRectangleBorder(

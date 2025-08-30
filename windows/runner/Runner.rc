@@ -89,13 +89,13 @@ BEGIN
     BEGIN
         BLOCK "040904e4"
         BEGIN
-            VALUE "CompanyName", "com.example" "\0"
-            VALUE "FileDescription", "persian_hokm" "\0"
+            VALUE "CompanyName", "Faraji" "\0"
+            VALUE "FileDescription", "As Hokme" "\0"
             VALUE "FileVersion", VERSION_AS_STRING "\0"
-            VALUE "InternalName", "persian_hokm" "\0"
-            VALUE "LegalCopyright", "Copyright (C) 2025 com.example. All rights reserved." "\0"
-            VALUE "OriginalFilename", "persian_hokm.exe" "\0"
-            VALUE "ProductName", "persian_hokm" "\0"
+            VALUE "InternalName", "As Hokme" "\0"
+            VALUE "LegalCopyright", "Copyright (C) 2025 Mohsen Faraji All rights reserved." "\0"
+            VALUE "OriginalFilename", "As Hokme.exe" "\0"
+            VALUE "ProductName", "As Hokme" "\0"
             VALUE "ProductVersion", VERSION_AS_STRING "\0"
         END
     END

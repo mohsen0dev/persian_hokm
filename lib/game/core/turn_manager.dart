@@ -1,5 +1,5 @@
 import 'package:get/get.dart';
-import 'package:persian_hokm/game/models/card.dart';
+import 'package:as_hokme/game/models/card.dart';
 
 /// مدیریت نوبت بازیکن و بررسی امکان بازی کارت
 class TurnManager {
@@ -13,6 +13,13 @@ class TurnManager {
     required Function(String) showSnackBar,
     required GameCard card,
   }) {
+    // اگر کارت دیگر در دست بازیکن انسانی وجود ندارد (به دلیل تاچ‌های متوالی)، نامعتبر است
+    if (currentPlayer == 'bottom') {
+      final containsCard = playerCards['bottom']!.contains(card);
+      if (!containsCard) {
+        return false;
+      }
+    }
     if (!isBottomPlayerTurn && currentPlayer != 'bottom') {
       return true;
     }

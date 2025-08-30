@@ -1,4 +1,4 @@
-package com.example.persian_hokm
+package com.gmail.farajiMohsen.as_hokm
 
 import io.flutter.embedding.android.FlutterActivity
 

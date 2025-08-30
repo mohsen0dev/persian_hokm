@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
-import 'package:persian_hokm/game/models/card.dart';
-import 'package:persian_hokm/game/presentation/controllers/game_controller.dart';
-import 'package:persian_hokm/game/presentation/pages/settings_screen.dart';
-import 'package:persian_hokm/game/presentation/widgets/animated_card.dart';
-import 'package:persian_hokm/game/presentation/widgets/card_widget.dart';
-import 'package:persian_hokm/game/presentation/widgets/played_animated_card.dart';
-import 'package:persian_hokm/game/presentation/widgets/screen_size_guard.dart';
+import 'package:as_hokme/game/models/card.dart';
+import 'package:as_hokme/game/presentation/controllers/game_controller.dart';
+import 'package:as_hokme/game/presentation/pages/settings_screen.dart';
+import 'package:as_hokme/game/presentation/widgets/animated_card.dart';
+import 'package:as_hokme/game/presentation/widgets/card_widget.dart';
+import 'package:as_hokme/game/presentation/widgets/played_animated_card.dart';
+import 'package:as_hokme/game/presentation/widgets/screen_size_guard.dart';
 import 'dart:math' as math;
 import 'package:confetti/confetti.dart';
 
@@ -169,6 +169,7 @@ class GameScreen extends StatelessWidget {
 
   /// نمایش انیمیشن فشفشه و پخش آهنگ برنده نهایی
   void showWinnerCelebration() {
+    print('start fesfeshee************');
     _confettiController.play();
   }
 

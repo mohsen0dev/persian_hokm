@@ -1,10 +1,10 @@
 import 'dart:async';
 import 'package:get/get.dart';
-import 'package:persian_hokm/game/models/card.dart';
-import 'package:persian_hokm/game/models/enums.dart';
-import 'package:persian_hokm/game/models/player.dart';
-import 'package:persian_hokm/game/core/sound_manager.dart';
-import 'package:persian_hokm/game/presentation/widgets/animated_card.dart';
+import 'package:as_hokme/game/models/card.dart';
+import 'package:as_hokme/game/models/enums.dart';
+import 'package:as_hokme/game/models/player.dart';
+import 'package:as_hokme/game/core/sound_manager.dart';
+import 'package:as_hokme/game/presentation/widgets/animated_card.dart';
 
 /// مدیریت توزیع کارت‌ها بین بازیکنان
 class CardDistributor {
@@ -78,6 +78,48 @@ class CardDistributor {
         animatedCards.removeWhere((a) => a.key == animData.key);
         // update();
         await Future.delayed(const Duration(milliseconds: 60));
+      }
+    }
+  }
+
+  /// توزیع کارت‌ها به صورت گروهی (همزمان برای هر بازیکن)
+  Future<void> dealCardsInGroups({
+    required int numCards,
+    required List<Direction> order,
+    required List<GameCard> deck,
+    required List<List<GameCard>> hands,
+    required List<Player> players,
+    required Map<String, RxList<GameCard>> playerCards,
+    required List<GameCard> cards,
+    required RxList<dynamic> animatedCards,
+    required void Function() update,
+  }) async {
+    for (final dir in order) {
+      final pos = _directionToString(dir);
+      final cardsForDir = <GameCard>[];
+      for (int i = 0; i < numCards; i++) {
+        final card = deck.removeAt(0);
+        cardsForDir.add(card);
+      }
+      // یکبار انیمیشن عمومی برای گروه
+      soundManager.play('pakhsh.mp3');
+      // نمایش انیمیشن فقط با اولین کارت جهت نمایش حرکت گروهی
+      if (cardsForDir.isNotEmpty) {
+        final animData =
+            AnimatedCard(card: cardsForDir.first, targetPosition: pos);
+        animatedCards.add(animData);
+        await Future.delayed(const Duration(milliseconds: 350));
+        animatedCards.removeWhere((a) => a.key == animData.key);
+        await Future.delayed(const Duration(milliseconds: 60));
+      }
+      // افزودن همه کارت‌ها به دست‌ها و UI
+      for (final card in cardsForDir) {
+        hands[dir.index].add(card);
+        if (players.isNotEmpty) {
+          card.player = players[dir.index];
+        }
+        playerCards[pos]?.add(card);
+        cards.removeAt(0);
       }
     }
   }
