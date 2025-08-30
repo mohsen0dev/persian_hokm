@@ -40,7 +40,7 @@ class UIHelper {
   ) async {
     final gameScreenCntrl = Get.put(GameScreen());
     gameScreenCntrl.showWinnerCelebration();
-    int secondsLeft = 10;
+    int secondsLeft = 3;
     Timer? timer;
 
     // تعیین پیام و رنگ بر اساس نوع برد
@@ -135,9 +135,9 @@ class UIHelper {
                   SizedBox(height: 16),
                   InkWell(
                     onTap: () {
-                      // timer?.cancel();
-                      // Get.back();
-                      // onContinue();
+                      timer?.cancel();
+                      Get.back();
+                      onContinue();
                       gameScreenCntrl.showWinnerCelebration();
                     },
                     child: Container(
